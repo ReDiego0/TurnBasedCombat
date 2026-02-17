@@ -54,7 +54,7 @@ class SQLManager(private val plugin: TurnBasedCombat) : DatabaseDataSource {
             statement.execute("""
                 CREATE TABLE IF NOT EXISTS tbc_duelists (
                     uuid VARCHAR(36) PRIMARY KEY,
-                    pokedollars INT DEFAULT 0,
+                    currency INT DEFAULT 0,
                     active_team_id INT DEFAULT 0,
                     wins INT DEFAULT 0,
                     losses INT DEFAULT 0
