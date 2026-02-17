@@ -1,7 +1,6 @@
 package org.ReDiego0.turnBasedCombat.listener
 
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import org.ReDiego0.turnBasedCombat.manager.DuelistManager
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
