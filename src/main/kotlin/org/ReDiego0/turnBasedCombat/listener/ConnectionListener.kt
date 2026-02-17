@@ -13,24 +13,34 @@ class ConnectionListener(private val manager: DuelistManager) : Listener {
 
     @EventHandler
     fun onPreLogin(event: AsyncPlayerPreLoginEvent) {
+        val uuid = event.uniqueId
+        val name = event.name
+
+        try {
+            manager.loadDuelistData(uuid, name).join()
+        } catch (e: Exception) {
+            event.disallow(
+                AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                Component.text("Error cargando tus datos de perfil. Contacta a un admin.")
+            )
+            e.printStackTrace()
+        }
     }
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
-        val player = event.player
-        manager.loadDuelist(player.uniqueId, player.name).thenAccept { duelist ->
-            player.sendMessage(Component.text("¡Bienvenido, Entrenador! Datos cargados.")
-                .color(NamedTextColor.GREEN))
-        }.exceptionally { ex ->
-            player.sendMessage(Component.text("Error cargando perfil. Reporta esto al admin.")
-                .color(NamedTextColor.RED))
-            ex.printStackTrace()
-            null
+        val duelist = manager.getDuelist(event.player.uniqueId)
+
+        if (duelist != null) {
+            // Lógica futura: Mostrar el HUD inicial aquí
+            event.player.sendMessage("¡Bienvenido duelista! [debug]")
+        } else {
+            event.player.kick(Component.text("Error crítico de sincronización."))
         }
     }
 
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
-        manager.saveAndRemove(event.player.uniqueId)
+        manager.saveDuelistData(event.player.uniqueId)
     }
 }
