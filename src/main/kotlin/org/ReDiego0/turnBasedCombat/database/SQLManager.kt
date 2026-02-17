@@ -65,7 +65,7 @@ class SQLManager(private val plugin: TurnBasedCombat) : DatabaseDataSource {
             // Nota: se guarda stats y moves como JSON string para flexibilidad
             statement.execute("""
                 CREATE TABLE IF NOT EXISTS tbc_companions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, -- O AUTO_INCREMENT en MySQL
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     owner_uuid VARCHAR(36),
                     species_id VARCHAR(64) NOT NULL,
                     nickname VARCHAR(32),
