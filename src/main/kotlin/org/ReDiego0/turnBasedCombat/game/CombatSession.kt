@@ -26,8 +26,8 @@ class CombatSession(
             currentState?.onTick(this)
         }, 0L, 1L)
 
-        // Estado inicial: Animación de entrada o Selección de primer mob
-        // transitionTo(InitializationState()) -> Lo defino luego
+        val renderer = org.ReDiego0.turnBasedCombat.view.VanillaCombatRenderer(plugin)
+        transitionTo(org.ReDiego0.turnBasedCombat.game.state.InitializationState(plugin, renderer))
     }
 
     fun transitionTo(newState: CombatState) {
