@@ -1,0 +1,53 @@
+nexo_fuego_1:
+  displayName: "Ignis"
+  elements:
+    - "fuego"
+  modelId: "model_ignis"
+  baseStats:
+    hp: 39.0
+    attack: 52
+    defense: 43
+    speed: 65
+    accuracy: 100
+    criticalChance: 0.05
+  learnset:
+    1:
+      - "embestida"
+    5:
+      - "ascuas"
+
+nexo_agua_1:
+  displayName: "Aqua"
+  elements:
+    - "agua"
+  modelId: "model_aqua"
+  baseStats:
+    hp: 44.0
+    attack: 48
+    defense: 65
+    speed: 43
+    accuracy: 100
+    criticalChance: 0.05
+  learnset:
+    1:
+      - "embestida"
+    5:
+      - "burbuja"
+
+nexo_planta_1:
+  displayName: "Flora"
+  elements:
+    - "planta"
+  modelId: "model_flora"
+  baseStats:
+    hp: 45.0
+    attack: 49
+    defense: 49
+    speed: 45
+    accuracy: 100
+    criticalChance: 0.05
+  learnset:
+    1:
+      - "embestida"
+    5:
+      - "latigo_cepa"

@@ -1,0 +1,31 @@
+embestida:
+  displayName: "Embestida"
+  elementId: "normal"
+  category: "PHYSICAL"
+  power: 40
+  accuracy: 100
+  applyStatusChance: 0.0
+
+ascuas:
+  displayName: "Ascuas"
+  elementId: "fuego"
+  category: "MAGICAL"
+  power: 40
+  accuracy: 100
+  applyStatusChance: 0.10
+
+burbuja:
+  displayName: "Burbuja"
+  elementId: "agua"
+  category: "MAGICAL"
+  power: 40
+  accuracy: 100
+  applyStatusChance: 0.0
+
+latigo_cepa:
+  displayName: "Látigo Cepa"
+  elementId: "planta"
+  category: "PHYSICAL"
+  power: 45
+  accuracy: 100
+  applyStatusChance: 0.0

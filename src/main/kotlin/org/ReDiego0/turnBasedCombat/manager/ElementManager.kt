@@ -39,7 +39,7 @@ class ElementManager(private val plugin: TurnBasedCombat) {
     fun getElement(id: String): Element? = elements[id]
 
     fun calculateMultiplier(attackElementId: String, defenderSpeciesId: String): Double {
-        val speciesElements = getSpeciesElementsDummy(defenderSpeciesId)
+        val speciesElements = plugin.speciesManager.getSpecies(defenderSpeciesId)?.elements ?: listOf("normal")
         var multiplier = 1.0
 
         for (defElementId in speciesElements) {
@@ -53,9 +53,5 @@ class ElementManager(private val plugin: TurnBasedCombat) {
         }
 
         return multiplier
-    }
-
-    private fun getSpeciesElementsDummy(speciesId: String): List<String> {
-        return listOf("normal")
     }
 }

@@ -1,0 +1,33 @@
+normal:
+  displayName: "Normal"
+  weaknesses: []
+  resistances: []
+  immunities: []
+
+fuego:
+  displayName: "Fuego"
+  weaknesses:
+    - "agua"
+  resistances:
+    - "fuego"
+    - "planta"
+  immunities: []
+  nativeStatusEffect: "quemadura"
+
+agua:
+  displayName: "Agua"
+  weaknesses:
+    - "planta"
+  resistances:
+    - "agua"
+    - "fuego"
+  immunities: []
+
+planta:
+  displayName: "Planta"
+  weaknesses:
+    - "fuego"
+  resistances:
+    - "agua"
+    - "planta"
+  immunities: []
