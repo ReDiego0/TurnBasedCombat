@@ -1,0 +1,25 @@
+default_arena: "arena_bosque"
+
+arenas:
+  arena_bosque:
+    world: "world"
+    x: 1000.5
+    y: 150.0
+    z: 1000.5
+    yaw: 0.0
+    pitch: 0.0
+    biomes:
+      - "FOREST"
+      - "BIRCH_FOREST"
+      - "DARK_FOREST"
+
+  arena_desierto:
+    world: "world"
+    x: -2000.5
+    y: 100.0
+    z: -2000.5
+    yaw: 0.0
+    pitch: 0.0
+    biomes:
+      - "DESERT"
+      - "BADLANDS"

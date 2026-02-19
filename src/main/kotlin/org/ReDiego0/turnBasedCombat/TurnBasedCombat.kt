@@ -4,6 +4,7 @@ import org.ReDiego0.turnBasedCombat.command.DuelCommand
 import org.ReDiego0.turnBasedCombat.database.SQLManager
 import org.ReDiego0.turnBasedCombat.listener.CombatInteractionListener
 import org.ReDiego0.turnBasedCombat.listener.ConnectionListener
+import org.ReDiego0.turnBasedCombat.manager.ArenaManager
 import org.ReDiego0.turnBasedCombat.manager.CombatManager
 import org.ReDiego0.turnBasedCombat.manager.DuelistManager
 import org.ReDiego0.turnBasedCombat.manager.ElementManager
@@ -24,6 +25,7 @@ class TurnBasedCombat : JavaPlugin() {
     lateinit var techniqueManager: TechniqueManager
     lateinit var elementManager: ElementManager
     lateinit var speciesManager: SpeciesManager
+    lateinit var arenaManager: ArenaManager
 
     override fun onEnable() {
         instance = this
@@ -44,6 +46,7 @@ class TurnBasedCombat : JavaPlugin() {
         techniqueManager = TechniqueManager(this)
         speciesManager = SpeciesManager(this)
         elementManager = ElementManager(this)
+        arenaManager = ArenaManager(this)
 
         server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
         server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)
