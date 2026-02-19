@@ -1,6 +1,12 @@
 package org.ReDiego0.turnBasedCombat
 
 import org.ReDiego0.turnBasedCombat.database.SQLManager
+import org.ReDiego0.turnBasedCombat.listener.CombatInteractionListener
+import org.ReDiego0.turnBasedCombat.listener.ConnectionListener
+import org.ReDiego0.turnBasedCombat.manager.CombatManager
+import org.ReDiego0.turnBasedCombat.manager.DuelistManager
+import org.ReDiego0.turnBasedCombat.manager.ElementManager
+import org.ReDiego0.turnBasedCombat.manager.TechniqueManager
 import org.bukkit.plugin.java.JavaPlugin
 
 class TurnBasedCombat : JavaPlugin() {
@@ -11,6 +17,10 @@ class TurnBasedCombat : JavaPlugin() {
     }
 
     lateinit var database: SQLManager
+    lateinit var duelistManager: DuelistManager
+    lateinit var combatManager: CombatManager
+    lateinit var techniqueManager: TechniqueManager
+    lateinit var elementManager: ElementManager
 
     override fun onEnable() {
         instance = this
@@ -25,6 +35,14 @@ class TurnBasedCombat : JavaPlugin() {
             server.pluginManager.disablePlugin(this)
             return
         }
+
+        duelistManager = DuelistManager(this)
+        combatManager = CombatManager(this)
+        techniqueManager = TechniqueManager(this)
+        elementManager = ElementManager(this)
+
+        server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
+        server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)
 
         logger.info("TurnBasedCombat habilitado correctamente ٩(◕‿◕)۶")
     }
