@@ -1,5 +1,7 @@
 package org.ReDiego0.turnBasedCombat.game
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.ReDiego0.turnBasedCombat.TurnBasedCombat
 import org.ReDiego0.turnBasedCombat.game.state.CombatState
 import org.ReDiego0.turnBasedCombat.game.state.InitializationState
@@ -49,7 +51,31 @@ class CombatSession(
 
         tickTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
             currentState?.onTick(this)
-        }, 0L, 1L)
+
+            val p1Comp = player1.team.firstOrNull { !it.isFainted() }
+            val p2Comp = player2.team.firstOrNull { !it.isFainted() }
+
+            if (p1Comp != null && p2Comp != null) {
+                val p1Bukkit = Bukkit.getPlayer(player1.uuid)
+                val p2Bukkit = Bukkit.getPlayer(player2.uuid)
+
+                if (p1Bukkit != null) {
+                    val hpText = Component.text("💚 ${p1Comp.nickname}: ${p1Comp.stats.hp.toInt()}/${p1Comp.stats.maxHp.toInt()} HP  ")
+                        .color(NamedTextColor.GREEN)
+                        .append(Component.text("⚔").color(NamedTextColor.GRAY))
+                        .append(Component.text("  ❤️ Rival: ${p2Comp.stats.hp.toInt()}/${p2Comp.stats.maxHp.toInt()} HP").color(NamedTextColor.RED))
+                    p1Bukkit.sendActionBar(hpText)
+                }
+
+                if (p2Bukkit != null) {
+                    val hpText = Component.text("💚 ${p2Comp.nickname}: ${p2Comp.stats.hp.toInt()}/${p2Comp.stats.maxHp.toInt()} HP  ")
+                        .color(NamedTextColor.GREEN)
+                        .append(Component.text("⚔").color(NamedTextColor.GRAY))
+                        .append(Component.text("  ❤️ Rival: ${p1Comp.stats.hp.toInt()}/${p1Comp.stats.maxHp.toInt()} HP").color(NamedTextColor.RED))
+                    p2Bukkit.sendActionBar(hpText)
+                }
+            }
+        }, 0L, 5L)
 
         val renderer = VanillaCombatRenderer(plugin)
         transitionTo(InitializationState(plugin, renderer))

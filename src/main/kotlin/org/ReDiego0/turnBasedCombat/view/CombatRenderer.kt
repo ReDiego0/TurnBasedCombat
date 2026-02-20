@@ -6,6 +6,7 @@ import org.ReDiego0.turnBasedCombat.TurnBasedCombat
 import org.ReDiego0.turnBasedCombat.game.CombatSession
 import org.ReDiego0.turnBasedCombat.model.Duelist
 import org.bukkit.Location
+import org.bukkit.entity.Player
 import org.bukkit.util.Vector
 import java.util.UUID
 
@@ -25,13 +26,14 @@ class VanillaCombatRenderer(
         clearMenu(duelist)
 
         val player = plugin.server.getPlayer(duelist.uuid) ?: return
-        val anchor = player.location.add(player.location.direction.multiply(3.0))
+
+        val anchor = player.location.clone().add(player.location.direction.multiply(3.5)).add(0.0, 1.2, 0.0)
         val buttons = mutableListOf<HolographicButton>()
 
-        buttons.add(createButton(anchor, -1.0, 0.5, "menu_fight", Component.text("⚔️ Luchar").color(NamedTextColor.RED)))
-        buttons.add(createButton(anchor, 1.0, 0.5, "menu_bag", Component.text("🎒 Bóveda").color(NamedTextColor.GOLD)))
-        buttons.add(createButton(anchor, -1.0, -0.5, "menu_team", Component.text("🛡️ Equipo").color(NamedTextColor.GREEN)))
-        buttons.add(createButton(anchor, 1.0, -0.5, "menu_flee", Component.text("🏃 Huir").color(NamedTextColor.GRAY)))
+        buttons.add(createButton(player, anchor, -1.2, 0.4, "menu_fight", Component.text("⚔️ Luchar").color(NamedTextColor.RED)))
+        buttons.add(createButton(player, anchor, 1.2, 0.4, "menu_bag", Component.text("🎒 Bóveda").color(NamedTextColor.GOLD)))
+        buttons.add(createButton(player, anchor, -1.2, -0.4, "menu_team", Component.text("🛡️ Equipo").color(NamedTextColor.GREEN)))
+        buttons.add(createButton(player, anchor, 1.2, -0.4, "menu_flee", Component.text("🏃 Huir").color(NamedTextColor.GRAY)))
 
         buttons.forEach {
             it.spawn()
@@ -44,21 +46,25 @@ class VanillaCombatRenderer(
         clearMenu(duelist)
 
         val player = plugin.server.getPlayer(duelist.uuid) ?: return
-        val anchor = player.location.add(player.location.direction.multiply(3.0))
+        val anchor = player.location.clone().add(player.location.direction.multiply(3.5)).add(0.0, 1.2, 0.0)
+
         val buttons = mutableListOf<HolographicButton>()
         val activeCompanion = duelist.team.firstOrNull { !it.isFainted() } ?: return
 
         activeCompanion.moves.forEachIndexed { index, techniqueId ->
-            val xOffset = if (index % 2 == 0) -1.0 else 1.0
-            val yOffset = if (index < 2) 0.5 else -0.5
+            val xOffset = if (index % 2 == 0) -1.2 else 1.2
+            val yOffset = if (index < 2) 0.4 else -0.4
+
+            val technique = plugin.techniqueManager.getTechnique(techniqueId)
+            val displayName = technique?.displayName ?: techniqueId
 
             buttons.add(createButton(
-                anchor, xOffset, yOffset, "tech_$techniqueId",
-                Component.text(techniqueId).color(NamedTextColor.AQUA)
+                player, anchor, xOffset, yOffset, "tech_$techniqueId",
+                Component.text("▶ $displayName").color(NamedTextColor.AQUA)
             ))
         }
 
-        buttons.add(createButton(anchor, 0.0, -1.5, "menu_main", Component.text("↩ Volver").color(NamedTextColor.GRAY)))
+        buttons.add(createButton(player, anchor, 0.0, -1.2, "menu_main", Component.text("↩ Volver").color(NamedTextColor.GRAY)))
 
         buttons.forEach {
             it.spawn()
@@ -72,8 +78,16 @@ class VanillaCombatRenderer(
         activeButtons[duelist.uuid]?.clear()
     }
 
-    private fun createButton(anchor: Location, x: Double, y: Double, action: String, text: Component): HolographicButton {
-        val loc = anchor.clone().add(Vector(x, y, 0.0))
+    private fun createButton(player: Player, anchor: Location, offsetX: Double, offsetY: Double, action: String, text: Component): HolographicButton {
+        val direction = player.location.direction.clone().setY(0.0).normalize()
+        val up = Vector(0, 1, 0)
+
+        val right = direction.getCrossProduct(up).normalize()
+
+        val loc = anchor.clone()
+            .add(right.multiply(offsetX))
+            .add(0.0, offsetY, 0.0)
+
         return HolographicButton(plugin, loc, action, text)
     }
 }
