@@ -8,6 +8,7 @@ import org.ReDiego0.turnBasedCombat.manager.ArenaManager
 import org.ReDiego0.turnBasedCombat.manager.CombatManager
 import org.ReDiego0.turnBasedCombat.manager.DuelistManager
 import org.ReDiego0.turnBasedCombat.manager.ElementManager
+import org.ReDiego0.turnBasedCombat.manager.ExperienceManager
 import org.ReDiego0.turnBasedCombat.manager.NpcManager
 import org.ReDiego0.turnBasedCombat.manager.SpeciesManager
 import org.ReDiego0.turnBasedCombat.manager.TechniqueManager
@@ -28,6 +29,7 @@ class TurnBasedCombat : JavaPlugin() {
     lateinit var speciesManager: SpeciesManager
     lateinit var arenaManager: ArenaManager
     lateinit var npcManager: NpcManager
+    lateinit var experienceManager: ExperienceManager
 
     override fun onEnable() {
         instance = this
@@ -50,6 +52,7 @@ class TurnBasedCombat : JavaPlugin() {
         elementManager = ElementManager(this)
         arenaManager = ArenaManager(this)
         npcManager = NpcManager(this)
+        experienceManager = ExperienceManager(this)
 
         server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
         server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)

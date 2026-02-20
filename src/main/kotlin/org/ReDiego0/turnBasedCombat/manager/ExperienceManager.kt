@@ -1,0 +1,64 @@
+package org.ReDiego0.turnBasedCombat.manager
+
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import org.ReDiego0.turnBasedCombat.TurnBasedCombat
+import org.ReDiego0.turnBasedCombat.model.Companion
+import org.bukkit.entity.Player
+import kotlin.math.pow
+
+class ExperienceManager(private val plugin: TurnBasedCombat) {
+
+    fun awardXp(winner: Companion, defeated: Companion, player: Player?) {
+        val xpGain = ((50.0 * defeated.level) / 7.0)
+        winner.xp += xpGain
+
+        player?.sendMessage(Component.text("¡${winner.nickname} ha ganado ${xpGain.toInt()} puntos de EXP!").color(NamedTextColor.GREEN))
+
+        while (winner.xp >= getXpRequiredForLevel(winner.level + 1)) {
+            levelUp(winner, player)
+        }
+    }
+
+    private fun getXpRequiredForLevel(level: Int): Double {
+        return level.toDouble().pow(3)
+    }
+
+    private fun levelUp(companion: Companion, player: Player?) {
+        companion.level += 1
+
+        val species = plugin.speciesManager.getSpecies(companion.speciesId) ?: return
+
+        val scaleFactor = 1.0 + (companion.level * 0.05)
+
+        companion.stats.attack = (species.baseStats.attack * scaleFactor).toInt()
+        companion.stats.defense = (species.baseStats.defense * scaleFactor).toInt()
+        companion.stats.speed = (species.baseStats.speed * scaleFactor).toInt()
+
+        val oldHp = companion.stats.hp
+        companion.stats.hp = species.baseStats.hp * scaleFactor
+
+        val hpDifference = companion.stats.hp - oldHp
+        if (hpDifference > 0) {
+            companion.stats.hp = oldHp + hpDifference
+        }
+
+        player?.sendMessage(Component.text("¡${companion.nickname} ha subido al nivel ${companion.level}!").color(NamedTextColor.GOLD))
+
+        val newMoves = species.learnset[companion.level]
+        if (newMoves != null) {
+            for (moveId in newMoves) {
+                if (companion.moves.size < 4 && !companion.moves.contains(moveId)) {
+                    companion.moves.add(moveId)
+                    val techniqueName = plugin.techniqueManager.getTechnique(moveId)?.displayName ?: moveId
+                    player?.sendMessage(Component.text("¡${companion.nickname} ha aprendido $techniqueName!").color(NamedTextColor.AQUA))
+                } else if (!companion.moves.contains(moveId)) {
+                    val techniqueName = plugin.techniqueManager.getTechnique(moveId)?.displayName ?: moveId
+                    player?.sendMessage(Component.text("${companion.nickname} quiere aprender $techniqueName, pero ya conoce 4 técnicas. Revisa tu Buzón de Entrenamiento.").color(NamedTextColor.YELLOW))
+
+                    // añadir el moveId a la lista pending_moves en la base de datos
+                }
+            }
+        }
+    }
+}

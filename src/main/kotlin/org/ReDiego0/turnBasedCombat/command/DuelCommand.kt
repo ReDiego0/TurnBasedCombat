@@ -30,10 +30,50 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
             "iaduel" -> {
                 if (sender.hasPermission("tbc.admin")) handleIaDuel(sender, args)
             }
+
+            "heal" -> {
+                if (sender.hasPermission("tbc.admin")) handleHeal(sender, args)
+            }
             else -> sender.sendMessage(Component.text("Comando desconocido.").color(NamedTextColor.RED))
         }
 
         return true
+    }
+
+    private fun handleHeal(sender: CommandSender, args: Array<String>) {
+        if (args.size < 2) {
+            sender.sendMessage(Component.text("Uso correcto: /tbc heal <jugador>").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetPlayer = Bukkit.getPlayerExact(args[1])
+        if (targetPlayer == null) {
+            sender.sendMessage(Component.text("Jugador no encontrado o desconectado.").color(NamedTextColor.RED))
+            return
+        }
+
+        val duelist = plugin.duelistManager.getDuelist(targetPlayer.uniqueId)
+        if (duelist == null) {
+            sender.sendMessage(Component.text("Error al cargar los datos del duelista.").color(NamedTextColor.RED))
+            return
+        }
+
+        if (plugin.combatManager.isInCombat(targetPlayer.uniqueId)) {
+            sender.sendMessage(Component.text("No puedes curar a un jugador que está en medio de un combate.").color(NamedTextColor.RED))
+            return
+        }
+
+        var curados = 0
+        for (companion in duelist.team) {
+            if (companion.stats.hp < companion.stats.maxHp) {
+                companion.stats.hp = companion.stats.maxHp
+                curados++
+            }
+        }
+
+        sender.sendMessage(Component.text("Has curado el equipo de ${targetPlayer.name} ($curados Companions curados).").color(NamedTextColor.GREEN))
+
+        targetPlayer.sendMessage(Component.text("¡Tus Companions han sido completamente curados!").color(NamedTextColor.GREEN))
     }
 
     private fun handleIaDuel(sender: CommandSender, args: Array<String>) {

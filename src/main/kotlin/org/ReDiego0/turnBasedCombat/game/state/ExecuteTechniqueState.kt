@@ -46,6 +46,10 @@ class ExecuteTechniqueState(
         if (defenderMob.stats.hp < 0.0) defenderMob.stats.hp = 0.0
 
         if (defenderMob.isFainted()) {
+
+            val activeBukkitPlayer = Bukkit.getPlayer(activePlayer.uuid)
+            plugin.experienceManager.awardXp(attackerMob, defenderMob, activeBukkitPlayer)
+
             if (opponent.hasValidTeam()) {
                 session.transitionTo(SwitchCompanionState(plugin, opponent, renderer))
             } else {
