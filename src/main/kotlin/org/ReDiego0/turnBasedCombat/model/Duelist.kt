@@ -7,6 +7,7 @@ data class Duelist(
     val name: String,
     var currency: Int = 0,
     val team: MutableList<Companion> = mutableListOf(),
+    val bag: MutableMap<String, Int> = mutableMapOf(),
     val pcStorage: MutableList<Companion> = mutableListOf()
 ) {
     fun hasValidTeam(): Boolean {

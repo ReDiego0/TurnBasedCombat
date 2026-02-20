@@ -2,6 +2,7 @@ package org.ReDiego0.turnBasedCombat
 
 import org.ReDiego0.turnBasedCombat.command.DuelCommand
 import org.ReDiego0.turnBasedCombat.database.SQLManager
+import org.ReDiego0.turnBasedCombat.listener.BagListener
 import org.ReDiego0.turnBasedCombat.listener.CombatInteractionListener
 import org.ReDiego0.turnBasedCombat.listener.ConnectionListener
 import org.ReDiego0.turnBasedCombat.listener.MenuListener
@@ -10,6 +11,7 @@ import org.ReDiego0.turnBasedCombat.manager.CombatManager
 import org.ReDiego0.turnBasedCombat.manager.DuelistManager
 import org.ReDiego0.turnBasedCombat.manager.ElementManager
 import org.ReDiego0.turnBasedCombat.manager.ExperienceManager
+import org.ReDiego0.turnBasedCombat.manager.ItemManager
 import org.ReDiego0.turnBasedCombat.manager.NpcManager
 import org.ReDiego0.turnBasedCombat.manager.SpeciesManager
 import org.ReDiego0.turnBasedCombat.manager.TechniqueManager
@@ -31,6 +33,7 @@ class TurnBasedCombat : JavaPlugin() {
     lateinit var arenaManager: ArenaManager
     lateinit var npcManager: NpcManager
     lateinit var experienceManager: ExperienceManager
+    lateinit var itemManager: ItemManager
 
     override fun onEnable() {
         instance = this
@@ -54,10 +57,12 @@ class TurnBasedCombat : JavaPlugin() {
         arenaManager = ArenaManager(this)
         npcManager = NpcManager(this)
         experienceManager = ExperienceManager(this)
+        itemManager = ItemManager(this)
 
         server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
         server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)
         server.pluginManager.registerEvents(MenuListener(this), this)
+        server.pluginManager.registerEvents(BagListener(this), this)
 
         getCommand("tbc")?.setExecutor(DuelCommand(this))
 

@@ -1,0 +1,96 @@
+package org.ReDiego0.turnBasedCombat.manager
+
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import org.ReDiego0.turnBasedCombat.TurnBasedCombat
+import org.ReDiego0.turnBasedCombat.model.Duelist
+import org.ReDiego0.turnBasedCombat.model.ItemTemplate
+import org.ReDiego0.turnBasedCombat.model.ItemType
+import org.bukkit.configuration.file.YamlConfiguration
+import org.bukkit.entity.Player
+import java.io.File
+
+class ItemManager(private val plugin: TurnBasedCombat) {
+
+    private val items = mutableMapOf<String, ItemTemplate>()
+
+    init {
+        loadItems()
+    }
+
+    fun loadItems() {
+        items.clear()
+        val file = File(plugin.dataFolder, "items.yml")
+        if (!file.exists()) plugin.saveResource("items.yml", false)
+
+        val config = YamlConfiguration.loadConfiguration(file)
+        for (key in config.getKeys(false)) {
+            val name = config.getString("$key.displayName") ?: key
+            val typeStr = config.getString("$key.type") ?: "HEAL_HP"
+            val type = runCatching { ItemType.valueOf(typeStr) }.getOrDefault(ItemType.HEAL_HP)
+            val power = config.getDouble("$key.power", 0.0)
+            val techId = config.getString("$key.techniqueId")
+
+            items[key] = ItemTemplate(key, name, type, power, techId)
+        }
+        plugin.logger.info("Ítems cargados: ${items.size}")
+    }
+
+    fun getItem(id: String): ItemTemplate? = items[id]
+
+    fun useItem(duelist: Duelist, itemId: String, targetIndex: Int, player: Player): Boolean {
+        val item = getItem(itemId) ?: return false
+        val companion = duelist.team.getOrNull(targetIndex) ?: return false
+
+        when (item.type) {
+            ItemType.HEAL_HP -> {
+                if (companion.stats.hp >= companion.stats.maxHp) {
+                    player.sendMessage(Component.text("¡${companion.nickname} ya tiene la vida al máximo!").color(NamedTextColor.RED))
+                    return false
+                }
+                companion.stats.hp += item.power
+                if (companion.stats.hp > companion.stats.maxHp) companion.stats.hp = companion.stats.maxHp
+                player.sendMessage(Component.text("Has curado a ${companion.nickname} con ${item.displayName}.").color(NamedTextColor.GREEN))
+            }
+            ItemType.HEAL_TEAM -> {
+                duelist.team.forEach { it.stats.hp = it.stats.maxHp }
+                player.sendMessage(Component.text("¡El equipo entero ha sido curado con ${item.displayName}!").color(NamedTextColor.GREEN))
+            }
+            ItemType.LEVEL_UP -> {
+                companion.level += 1
+                val species = plugin.speciesManager.getSpecies(companion.speciesId)
+                if (species != null) {
+                    val scaleFactor = 1.0 + (companion.level * 0.05)
+                    companion.stats.maxHp = species.baseStats.hp * scaleFactor
+                    companion.stats.attack = (species.baseStats.attack * scaleFactor).toInt()
+                    companion.stats.defense = (species.baseStats.defense * scaleFactor).toInt()
+                    companion.stats.speed = (species.baseStats.speed * scaleFactor).toInt()
+                }
+                player.sendMessage(Component.text("¡${companion.nickname} subió al nivel ${companion.level} con ${item.displayName}!").color(NamedTextColor.GOLD))
+            }
+            ItemType.TEACH_TECHNIQUE -> {
+                val tech = item.techniqueId ?: return false
+                if (companion.moves.contains(tech)) {
+                    player.sendMessage(Component.text("¡${companion.nickname} ya conoce esta técnica!").color(NamedTextColor.RED))
+                    return false
+                }
+                if (companion.moves.size >= 4) {
+                    player.sendMessage(Component.text("¡${companion.nickname} ya conoce 4 movimientos! Olvida uno primero.").color(NamedTextColor.RED))
+                    return false
+                }
+                companion.moves.add(tech)
+                player.sendMessage(Component.text("¡${companion.nickname} aprendió una nueva técnica!").color(NamedTextColor.AQUA))
+            }
+            else -> {
+                player.sendMessage(Component.text("Este ítem aún no tiene efecto programado.").color(NamedTextColor.GRAY))
+                return false
+            }
+        }
+
+        val count = duelist.bag[itemId] ?: 0
+        if (count > 1) duelist.bag[itemId] = count - 1
+        else duelist.bag.remove(itemId)
+
+        return true
+    }
+}
