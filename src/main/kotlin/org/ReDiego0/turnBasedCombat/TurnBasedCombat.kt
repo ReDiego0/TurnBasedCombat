@@ -68,6 +68,10 @@ class TurnBasedCombat : JavaPlugin() {
 
         getCommand("tbc")?.setExecutor(DuelCommand(this))
 
+        if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
+            org.ReDiego0.turnBasedCombat.placeholder.TBCPlaceholderExpansion(this).register()
+        }
+
         logger.info("TurnBasedCombat habilitado correctamente ٩(◕‿◕)۶")
     }
 

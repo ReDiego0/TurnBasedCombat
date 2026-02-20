@@ -9,6 +9,8 @@ data class Duelist(
     val team: MutableList<Companion> = mutableListOf(),
     val bag: MutableMap<String, Int> = mutableMapOf(),
     val pcStorage: MutableList<Companion> = mutableListOf(),
+    val wins: Int = 0,
+    val losses: Int = 0,
 
     var isWild: Boolean = false
 ) {

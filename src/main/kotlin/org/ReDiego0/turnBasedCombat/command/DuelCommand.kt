@@ -29,6 +29,11 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
             "accept" -> handleAccept(sender)
             "team" -> handleTeam(sender)
             "bag" -> handleBag(sender)
+
+            "giveitem" -> {
+                if (sender.hasPermission("tbc.admin")) handleGiveItem(sender, args)
+            }
+
             "iaduel" -> {
                 if (sender.hasPermission("tbc.admin")) handleIaDuel(sender, args)
             }
@@ -48,6 +53,36 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
         }
 
         return true
+    }
+
+    private fun handleGiveItem(sender: CommandSender, args: Array<String>) {
+        if (args.size < 4) {
+            sender.sendMessage(Component.text("Uso: /tbc giveitem <jugador> <item_id> <cantidad>").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetPlayer = Bukkit.getPlayerExact(args[1])
+        if (targetPlayer == null) {
+            sender.sendMessage(Component.text("Jugador no encontrado.").color(NamedTextColor.RED))
+            return
+        }
+
+        val duelist = plugin.duelistManager.getDuelist(targetPlayer.uniqueId) ?: return
+        val itemId = args[2]
+
+        val itemTemplate = plugin.itemManager.getItem(itemId)
+        if (itemTemplate == null) {
+            sender.sendMessage(Component.text("El ítem '$itemId' no existe en items.yml.").color(NamedTextColor.RED))
+            return
+        }
+
+        val amount = args[3].toIntOrNull() ?: 1
+        val currentAmount = duelist.bag[itemId] ?: 0
+
+        duelist.bag[itemId] = currentAmount + amount
+
+        sender.sendMessage(Component.text("Has dado $amount x ${itemTemplate.displayName} a ${targetPlayer.name}.").color(NamedTextColor.GREEN))
+        targetPlayer.sendMessage(Component.text("¡Has recibido $amount x ${itemTemplate.displayName}!").color(NamedTextColor.GREEN))
     }
 
     private fun handleGiveCompanion(sender: CommandSender, args: Array<String>) {
