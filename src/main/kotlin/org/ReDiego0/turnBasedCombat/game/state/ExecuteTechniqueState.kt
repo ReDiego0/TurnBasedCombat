@@ -5,6 +5,7 @@ import org.ReDiego0.turnBasedCombat.game.CombatSession
 import org.ReDiego0.turnBasedCombat.model.Duelist
 import org.ReDiego0.turnBasedCombat.model.TechniqueCategory
 import org.ReDiego0.turnBasedCombat.view.CombatRenderer
+import org.bukkit.Bukkit
 import kotlin.random.Random
 
 class ExecuteTechniqueState(
@@ -26,7 +27,7 @@ class ExecuteTechniqueState(
 
         val technique = plugin.techniqueManager.getTechnique(techniqueId)
         if (technique == null) {
-            session.transitionTo(PlayerTurnState(activePlayer, renderer))
+            routeNextTurn(session, activePlayer)
             return
         }
 
@@ -46,18 +47,24 @@ class ExecuteTechniqueState(
 
         if (defenderMob.isFainted()) {
             if (opponent.hasValidTeam()) {
-                session.transitionTo(SwitchCompanionState(opponent, renderer))
+                session.transitionTo(SwitchCompanionState(plugin, opponent, renderer))
             } else {
                 session.endCombat(activePlayer)
             }
         } else {
-            session.transitionTo(PlayerTurnState(opponent, renderer))
+            routeNextTurn(session, opponent)
+        }
+    }
+
+    private fun routeNextTurn(session: CombatSession, nextPlayer: Duelist) {
+        if (Bukkit.getPlayer(nextPlayer.uuid) == null) {
+            session.transitionTo(AITurnState(plugin, nextPlayer, renderer))
+        } else {
+            session.transitionTo(PlayerTurnState(nextPlayer, renderer))
         }
     }
 
     override fun onInput(session: CombatSession, player: Duelist, inputId: String) {}
-
     override fun onTick(session: CombatSession) {}
-
     override fun onExit(session: CombatSession) {}
 }
