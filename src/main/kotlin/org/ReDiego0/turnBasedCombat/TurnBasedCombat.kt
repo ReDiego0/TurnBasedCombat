@@ -57,7 +57,7 @@ class TurnBasedCombat : JavaPlugin() {
 
         server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
         server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)
-        server.pluginManager.registerEvents(MenuListener(), this)
+        server.pluginManager.registerEvents(MenuListener(this), this)
 
         getCommand("tbc")?.setExecutor(DuelCommand(this))
 

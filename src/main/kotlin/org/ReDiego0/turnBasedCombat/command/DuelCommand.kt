@@ -35,10 +35,45 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
             "heal" -> {
                 if (sender.hasPermission("tbc.admin")) handleHeal(sender, args)
             }
+
+            "pc" -> {
+                if (sender.hasPermission("tbc.admin")) handlePc(sender, args)
+            }
             else -> sender.sendMessage(Component.text("Comando desconocido.").color(NamedTextColor.RED))
         }
 
         return true
+    }
+
+    private fun handlePc(sender: CommandSender, args: Array<String>) {
+        if (args.size < 2) {
+            sender.sendMessage(Component.text("Uso correcto: /tbc pc <jugador>").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetPlayer = org.bukkit.Bukkit.getPlayerExact(args[1])
+        if (targetPlayer == null) {
+            sender.sendMessage(Component.text("Jugador no encontrado o desconectado.").color(NamedTextColor.RED))
+            return
+        }
+
+        val duelist = plugin.duelistManager.getDuelist(targetPlayer.uniqueId)
+        if (duelist == null) {
+            sender.sendMessage(Component.text("Error al cargar los datos del duelista.").color(NamedTextColor.RED))
+            return
+        }
+
+        if (plugin.combatManager.isInCombat(targetPlayer.uniqueId)) {
+            sender.sendMessage(Component.text("El jugador no puede acceder al PC mientras está en combate.").color(NamedTextColor.RED))
+            return
+        }
+
+        val gui = org.ReDiego0.turnBasedCombat.view.PcGUI(plugin)
+        gui.openFor(targetPlayer, duelist)
+
+        if (sender != targetPlayer) {
+            sender.sendMessage(Component.text("Abriendo el PC para ${targetPlayer.name}.").color(NamedTextColor.GREEN))
+        }
     }
 
     private fun handleTeam(sender: Player) {
