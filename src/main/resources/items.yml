@@ -1,0 +1,34 @@
+pocion_basica:
+  displayName: "Poción Básica"
+  type: "HEAL_HP"
+  power: 20.0
+
+pocion_fuerte:
+  displayName: "Poción Fuerte"
+  type: "HEAL_HP"
+  power: 50.0
+
+cura_equipo:
+  displayName: "Kit de Rescate"
+  type: "HEAL_TEAM"
+  power: 0.0
+
+caramelo_raro:
+  displayName: "Caramelo de Experiencia"
+  type: "LEVEL_UP"
+  power: 0.0
+
+mt_embestida:
+  displayName: "MT - Embestida"
+  type: "TEACH_TECHNIQUE"
+  techniqueId: "embestida"
+
+esfera_basica:
+  displayName: "Esfera de Captura"
+  type: "CAPTURE_DEVICE"
+  power: 1.0
+
+esfera_avanzada:
+  displayName: "Esfera Avanzada"
+  type: "CAPTURE_DEVICE"
+  power: 1.5
