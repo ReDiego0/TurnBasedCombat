@@ -6,7 +6,8 @@ enum class ItemType {
     CURE_STATUS,
     FULL_RESTORE,
     LEVEL_UP,
-    TEACH_TECHNIQUE
+    TEACH_TECHNIQUE,
+    CAPTURE_DEVICE
 }
 
 data class ItemTemplate(

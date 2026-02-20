@@ -6,5 +6,6 @@ data class SpeciesTemplate(
     val elements: List<String>,
     val baseStats: CombatStats,
     val learnset: Map<Int, List<String>>,
-    val modelId: String
+    val modelId: String,
+    val catchRate: Int = 255
 )

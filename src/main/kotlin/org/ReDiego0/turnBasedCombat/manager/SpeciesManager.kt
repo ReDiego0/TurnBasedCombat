@@ -41,6 +41,8 @@ class SpeciesManager(private val plugin: TurnBasedCombat) {
             val learnset = mutableMapOf<Int, List<String>>()
             val learnsetSection = config.getConfigurationSection("$key.learnset")
 
+            val catchRate = config.getInt("$key.catchRate", 255)
+
             if (learnsetSection != null) {
                 for (levelStr in learnsetSection.getKeys(false)) {
                     val level = levelStr.toIntOrNull() ?: continue

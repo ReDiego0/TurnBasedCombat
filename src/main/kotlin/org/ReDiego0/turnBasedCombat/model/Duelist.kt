@@ -8,7 +8,9 @@ data class Duelist(
     var currency: Int = 0,
     val team: MutableList<Companion> = mutableListOf(),
     val bag: MutableMap<String, Int> = mutableMapOf(),
-    val pcStorage: MutableList<Companion> = mutableListOf()
+    val pcStorage: MutableList<Companion> = mutableListOf(),
+
+    var isWild: Boolean = false
 ) {
     fun hasValidTeam(): Boolean {
         return team.any { !it.isFainted() }

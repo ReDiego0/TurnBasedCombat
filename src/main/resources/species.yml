@@ -3,6 +3,7 @@ nexo_fuego_1:
   elements:
     - "fuego"
   modelId: "model_ignis"
+  catchRate: 255
   baseStats:
     hp: 39.0
     attack: 52
@@ -21,6 +22,7 @@ nexo_agua_1:
   elements:
     - "agua"
   modelId: "model_aqua"
+  catchRate: 255
   baseStats:
     hp: 44.0
     attack: 48
@@ -39,6 +41,7 @@ nexo_planta_1:
   elements:
     - "planta"
   modelId: "model_flora"
+  catchRate: 255
   baseStats:
     hp: 45.0
     attack: 49

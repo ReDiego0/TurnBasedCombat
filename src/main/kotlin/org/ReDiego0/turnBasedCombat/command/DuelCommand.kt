@@ -33,6 +33,10 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
                 if (sender.hasPermission("tbc.admin")) handleIaDuel(sender, args)
             }
 
+            "givecompanion" -> {
+                if (sender.hasPermission("tbc.admin")) handleGiveCompanion(sender, args)
+            }
+
             "heal" -> {
                 if (sender.hasPermission("tbc.admin")) handleHeal(sender, args)
             }
@@ -44,6 +48,73 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
         }
 
         return true
+    }
+
+    private fun handleGiveCompanion(sender: CommandSender, args: Array<String>) {
+        if (!sender.hasPermission("tbc.admin")) {
+            sender.sendMessage(Component.text("No tienes permisos.").color(NamedTextColor.RED))
+            return
+        }
+
+        if (args.size < 4) {
+            sender.sendMessage(Component.text("Uso: /tbc givecompanion <jugador> <species_id> <nivel>").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetPlayer = Bukkit.getPlayerExact(args[1])
+        if (targetPlayer == null) {
+            sender.sendMessage(Component.text("Jugador no encontrado.").color(NamedTextColor.RED))
+            return
+        }
+
+        val duelist = plugin.duelistManager.getDuelist(targetPlayer.uniqueId) ?: return
+        val speciesId = args[2]
+        val species = plugin.speciesManager.getSpecies(speciesId)
+
+        if (species == null) {
+            sender.sendMessage(Component.text("Especie no encontrada en species.yml.").color(NamedTextColor.RED))
+            return
+        }
+
+        val level = args[3].toIntOrNull() ?: 1
+
+        val availableMoves = mutableListOf<String>()
+        for ((learnLevel, moves) in species.learnset) {
+            if (level >= learnLevel) availableMoves.addAll(moves)
+        }
+        val finalMoves = availableMoves.takeLast(4).toMutableList()
+
+        val scaleFactor = 1.0 + (level * 0.05)
+        val stats = org.ReDiego0.turnBasedCombat.model.CombatStats(
+            hp = species.baseStats.hp * scaleFactor,
+            maxHp = species.baseStats.hp * scaleFactor,
+            attack = (species.baseStats.attack * scaleFactor).toInt(),
+            defense = (species.baseStats.defense * scaleFactor).toInt(),
+            speed = (species.baseStats.speed * scaleFactor).toInt(),
+            accuracy = species.baseStats.accuracy,
+            criticalChance = species.baseStats.criticalChance
+        )
+
+        val newCompanion = org.ReDiego0.turnBasedCombat.model.Companion(
+            id = -1,
+            ownerUuid = duelist.uuid,
+            speciesId = speciesId,
+            nickname = species.displayName,
+            level = level,
+            xp = 0.0,
+            stats = stats,
+            moves = finalMoves
+        )
+
+        if (duelist.team.size < 6) {
+            duelist.team.add(newCompanion)
+            targetPlayer.sendMessage(Component.text("¡Has recibido un ${species.displayName} (Nv. $level)!").color(NamedTextColor.GREEN))
+        } else {
+            duelist.pcStorage.add(newCompanion)
+            targetPlayer.sendMessage(Component.text("¡Has recibido un ${species.displayName} (Nv. $level)! Se ha enviado al PC.").color(NamedTextColor.GREEN))
+        }
+
+        sender.sendMessage(Component.text("Companion entregado a ${targetPlayer.name}.").color(NamedTextColor.GREEN))
     }
 
     private fun handleBag(sender: Player) {

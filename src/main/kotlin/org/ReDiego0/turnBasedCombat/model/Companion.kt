@@ -4,7 +4,7 @@ import java.util.UUID
 
 data class Companion(
     val id: Int,
-    val ownerUuid: UUID,
+    var ownerUuid: UUID,
     val speciesId: String,
     var nickname: String?,
     var level: Int,
