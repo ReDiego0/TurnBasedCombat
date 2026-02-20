@@ -18,6 +18,8 @@ class CombatSession(
     val player2: Duelist,
     private val triggerLocation: Location
 ) {
+    val pendingActions: MutableList<TurnAction> = mutableListOf()
+
     var currentState: CombatState? = null
         private set
 
