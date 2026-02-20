@@ -4,6 +4,7 @@ import org.ReDiego0.turnBasedCombat.command.DuelCommand
 import org.ReDiego0.turnBasedCombat.database.SQLManager
 import org.ReDiego0.turnBasedCombat.listener.CombatInteractionListener
 import org.ReDiego0.turnBasedCombat.listener.ConnectionListener
+import org.ReDiego0.turnBasedCombat.listener.MenuListener
 import org.ReDiego0.turnBasedCombat.manager.ArenaManager
 import org.ReDiego0.turnBasedCombat.manager.CombatManager
 import org.ReDiego0.turnBasedCombat.manager.DuelistManager
@@ -56,6 +57,7 @@ class TurnBasedCombat : JavaPlugin() {
 
         server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
         server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)
+        server.pluginManager.registerEvents(MenuListener(), this)
 
         getCommand("tbc")?.setExecutor(DuelCommand(this))
 

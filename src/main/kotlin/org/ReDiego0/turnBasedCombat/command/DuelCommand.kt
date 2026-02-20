@@ -27,6 +27,7 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
         when (args[0].lowercase()) {
             "duel" -> handleDuelRequest(sender, args)
             "accept" -> handleAccept(sender)
+            "team" -> handleTeam(sender)
             "iaduel" -> {
                 if (sender.hasPermission("tbc.admin")) handleIaDuel(sender, args)
             }
@@ -38,6 +39,17 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
         }
 
         return true
+    }
+
+    private fun handleTeam(sender: Player) {
+        val duelist = plugin.duelistManager.getDuelist(sender.uniqueId)
+        if (duelist == null) {
+            sender.sendMessage(Component.text("Error al cargar los datos de tu perfil.").color(NamedTextColor.RED))
+            return
+        }
+
+        val gui = org.ReDiego0.turnBasedCombat.view.TeamGUI(plugin)
+        gui.openFor(sender, duelist)
     }
 
     private fun handleHeal(sender: CommandSender, args: Array<String>) {
