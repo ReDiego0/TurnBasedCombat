@@ -41,11 +41,7 @@ class InitializationState(
             isolateEntity(p2Entity, p1Player, p2Player)
         }
 
-        val p1Speed = p1Companion.stats.speed
-        val p2Speed = p2Companion.stats.speed
-        val firstPlayer = if (p1Speed >= p2Speed) session.player1 else session.player2
-
-        session.transitionTo(PlayerTurnState(firstPlayer, renderer))
+        session.transitionTo(ActionSelectionState(plugin, renderer))
     }
 
     private fun isolateEntity(entity: org.bukkit.entity.Entity, p1: org.bukkit.entity.Player, p2: org.bukkit.entity.Player) {

@@ -4,9 +4,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.ReDiego0.turnBasedCombat.TurnBasedCombat
-import org.ReDiego0.turnBasedCombat.game.state.AITurnState
 import org.ReDiego0.turnBasedCombat.game.state.AttemptCaptureState
-import org.ReDiego0.turnBasedCombat.game.state.PlayerTurnState
 import org.ReDiego0.turnBasedCombat.model.Duelist
 import org.ReDiego0.turnBasedCombat.model.ItemType
 import org.ReDiego0.turnBasedCombat.view.CombatBagMainHolder
@@ -14,7 +12,6 @@ import org.ReDiego0.turnBasedCombat.view.CombatBagTargetHolder
 import org.ReDiego0.turnBasedCombat.view.CombatInventoryGUIs
 import org.ReDiego0.turnBasedCombat.view.CombatTeamHolder
 import org.ReDiego0.turnBasedCombat.view.VanillaCombatRenderer
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -101,10 +98,6 @@ class CombatInventoryListener(private val plugin: TurnBasedCombat) : Listener {
 
     private fun passTurn(session: org.ReDiego0.turnBasedCombat.game.CombatSession, opponent: Duelist) {
         val renderer = VanillaCombatRenderer(plugin)
-        if (Bukkit.getPlayer(opponent.uuid) == null) {
-            session.transitionTo(AITurnState(plugin, opponent, renderer))
-        } else {
-            session.transitionTo(PlayerTurnState(opponent, renderer))
-        }
+        session.transitionTo(org.ReDiego0.turnBasedCombat.game.state.ActionSelectionState(plugin, renderer))
     }
 }

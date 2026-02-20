@@ -34,7 +34,9 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
                         val wins = rs.getInt("wins")
                         val losses = rs.getInt("losses")
 
-                        duelist = Duelist(uuid, name, currency, mutableListOf(), mutableListOf())
+                        duelist = Duelist(uuid, name).apply {
+                            this.currency = currency
+                        }
                     } else {
                         val insert = conn.prepareStatement(
                             "INSERT INTO tbc_duelists (uuid, currency, active_team_id, wins, losses) VALUES (?, 0, 0, 0, 0)"

@@ -31,11 +31,7 @@ class SwitchCompanionState(
     }
 
     private fun routeNextTurn(session: CombatSession, nextPlayer: Duelist) {
-        if (Bukkit.getPlayer(nextPlayer.uuid) == null) {
-            session.transitionTo(AITurnState(plugin, nextPlayer, renderer))
-        } else {
-            session.transitionTo(PlayerTurnState(nextPlayer, renderer))
-        }
+        session.transitionTo(ActionSelectionState(plugin, renderer))
     }
 
     override fun onInput(session: CombatSession, player: Duelist, inputId: String) {}

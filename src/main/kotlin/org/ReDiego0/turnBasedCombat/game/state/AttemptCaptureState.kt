@@ -23,13 +23,13 @@ class AttemptCaptureState(
         val wildCompanion = targetDuelist.team.firstOrNull { !it.isFainted() }
 
         if (player == null || captureItem == null || wildCompanion == null) {
-            session.transitionTo(PlayerTurnState(activePlayer, renderer))
+            session.transitionTo(ActionSelectionState(plugin, renderer))
             return
         }
 
         if (!targetDuelist.isWild) {
             player.sendMessage(Component.text("¡No puedes robar el Companion de otro duelista!").color(NamedTextColor.RED))
-            session.transitionTo(PlayerTurnState(activePlayer, renderer))
+            session.transitionTo(ActionSelectionState(plugin, renderer))
             return
         }
 
@@ -72,7 +72,7 @@ class AttemptCaptureState(
                 session.endCombat(activePlayer)
             } else {
                 player.sendMessage(Component.text("¡Oh no! ¡El Companion salvaje se ha liberado!").color(NamedTextColor.RED))
-                session.transitionTo(AITurnState(plugin, targetDuelist, renderer))
+                session.transitionTo(ActionSelectionState(plugin, renderer))
             }
         }, 40L)
     }
