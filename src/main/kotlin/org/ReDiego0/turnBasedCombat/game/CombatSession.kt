@@ -27,23 +27,23 @@ class CombatSession(
     var turnCounter: Int = 0
     val activeEntities = mutableListOf<org.bukkit.entity.Entity>()
 
-    private lateinit var p1OriginalLoc: Location
-    private lateinit var p2OriginalLoc: Location
+    private var p1OriginalLoc: Location? = null
+    private var p2OriginalLoc: Location? = null
     lateinit var arenaCenter: Location
 
     fun start() {
         val p1 = Bukkit.getPlayer(player1.uuid)
         val p2 = Bukkit.getPlayer(player2.uuid)
 
-        if (p1 == null || p2 == null) return
+        if (p1 == null && p2 == null) return
 
-        p1OriginalLoc = p1.location.clone()
-        p2OriginalLoc = p2.location.clone()
+        p1?.let { p1OriginalLoc = it.location.clone() }
+        p2?.let { p2OriginalLoc = it.location.clone() }
 
         arenaCenter = plugin.arenaManager.getArenaForLocation(triggerLocation)
 
-        setupPlayerForCombat(p1, arenaCenter.clone().add(5.0, 0.0, 0.0).apply { yaw = 90f })
-        setupPlayerForCombat(p2, arenaCenter.clone().add(-5.0, 0.0, 0.0).apply { yaw = -90f })
+        p1?.let { setupPlayerForCombat(it, arenaCenter.clone().add(5.0, 0.0, 0.0).apply { yaw = 90f }) }
+        p2?.let { setupPlayerForCombat(it, arenaCenter.clone().add(-5.0, 0.0, 0.0).apply { yaw = -90f }) }
 
         isolatePlayers(p1, p2)
 
@@ -71,12 +71,10 @@ class CombatSession(
         val p1 = Bukkit.getPlayer(player1.uuid)
         val p2 = Bukkit.getPlayer(player2.uuid)
 
-        p1?.let { restorePlayer(it, p1OriginalLoc) }
-        p2?.let { restorePlayer(it, p2OriginalLoc) }
+        p1?.let { loc -> p1OriginalLoc?.let { restorePlayer(loc, it) } }
+        p2?.let { loc -> p2OriginalLoc?.let { restorePlayer(loc, it) } }
 
-        if (p1 != null && p2 != null) {
-            reintegratePlayers(p1, p2)
-        }
+        reintegratePlayers(p1, p2)
 
         plugin.combatManager.removeSession(this)
     }
@@ -93,23 +91,23 @@ class CombatSession(
         player.removePotionEffect(PotionEffectType.JUMP_BOOST)
     }
 
-    private fun isolatePlayers(p1: Player, p2: Player) {
+    private fun isolatePlayers(p1: Player?, p2: Player?) {
         for (onlinePlayer in Bukkit.getOnlinePlayers()) {
             if (onlinePlayer != p1 && onlinePlayer != p2) {
-                p1.hidePlayer(plugin, onlinePlayer)
-                p2.hidePlayer(plugin, onlinePlayer)
-                onlinePlayer.hidePlayer(plugin, p1)
-                onlinePlayer.hidePlayer(plugin, p2)
+                p1?.hidePlayer(plugin, onlinePlayer)
+                p2?.hidePlayer(plugin, onlinePlayer)
+                p1?.let { onlinePlayer.hidePlayer(plugin, it) }
+                p2?.let { onlinePlayer.hidePlayer(plugin, it) }
             }
         }
     }
 
-    private fun reintegratePlayers(p1: Player, p2: Player) {
+    private fun reintegratePlayers(p1: Player?, p2: Player?) {
         for (onlinePlayer in Bukkit.getOnlinePlayers()) {
-            p1.showPlayer(plugin, onlinePlayer)
-            p2.showPlayer(plugin, onlinePlayer)
-            onlinePlayer.showPlayer(plugin, p1)
-            onlinePlayer.showPlayer(plugin, p2)
+            p1?.showPlayer(plugin, onlinePlayer)
+            p2?.showPlayer(plugin, onlinePlayer)
+            p1?.let { onlinePlayer.showPlayer(plugin, it) }
+            p2?.let { onlinePlayer.showPlayer(plugin, it) }
         }
     }
 }

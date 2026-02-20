@@ -9,7 +9,7 @@ import org.bukkit.entity.Player
 
 class CompanionVisualSpawner(private val plugin: TurnBasedCombat) {
 
-    fun spawnCompanion(companion: Companion, location: Location, owner: Player): org.bukkit.entity.Entity {
+    fun spawnCompanion(companion: Companion, location: Location, owner: Player?): org.bukkit.entity.Entity {
         val species = plugin.speciesManager.getSpecies(companion.speciesId)
         val modelId = species?.modelId ?: "vanilla_wolf"
 

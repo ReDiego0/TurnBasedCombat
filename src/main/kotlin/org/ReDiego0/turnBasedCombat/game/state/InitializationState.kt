@@ -6,6 +6,7 @@ import org.ReDiego0.turnBasedCombat.model.Duelist
 import org.ReDiego0.turnBasedCombat.view.CombatRenderer
 import org.ReDiego0.turnBasedCombat.view.CompanionVisualSpawner
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 
 class InitializationState(
     private val plugin: TurnBasedCombat,
@@ -25,26 +26,24 @@ class InitializationState(
         val p1Player = Bukkit.getPlayer(session.player1.uuid)
         val p2Player = Bukkit.getPlayer(session.player2.uuid)
 
-        if (p1Player != null && p2Player != null) {
-            val visualSpawner = CompanionVisualSpawner(plugin)
+        val visualSpawner = CompanionVisualSpawner(plugin)
 
-            val p1MobLoc = p1Player.location.clone().add(p1Player.location.direction.multiply(2.0))
-            val p2MobLoc = p2Player.location.clone().add(p2Player.location.direction.multiply(2.0))
+        val p1MobLoc = session.arenaCenter.clone().add(2.0, 0.0, 0.0).apply { yaw = 90f }
+        val p2MobLoc = session.arenaCenter.clone().add(-2.0, 0.0, 0.0).apply { yaw = -90f }
 
-            val p1Entity = visualSpawner.spawnCompanion(p1Companion, p1MobLoc, p1Player)
-            val p2Entity = visualSpawner.spawnCompanion(p2Companion, p2MobLoc, p2Player)
+        val p1Entity = visualSpawner.spawnCompanion(p1Companion, p1MobLoc, p1Player)
+        val p2Entity = visualSpawner.spawnCompanion(p2Companion, p2MobLoc, p2Player)
 
-            session.activeEntities.add(p1Entity)
-            session.activeEntities.add(p2Entity)
+        session.activeEntities.add(p1Entity)
+        session.activeEntities.add(p2Entity)
 
-            isolateEntity(p1Entity, p1Player, p2Player)
-            isolateEntity(p2Entity, p1Player, p2Player)
-        }
+        isolateEntity(p1Entity, p1Player, p2Player)
+        isolateEntity(p2Entity, p1Player, p2Player)
 
         session.transitionTo(ActionSelectionState(plugin, renderer))
     }
 
-    private fun isolateEntity(entity: org.bukkit.entity.Entity, p1: org.bukkit.entity.Player, p2: org.bukkit.entity.Player) {
+    private fun isolateEntity(entity: org.bukkit.entity.Entity, p1: Player?, p2: Player?) {
         for (onlinePlayer in Bukkit.getOnlinePlayers()) {
             if (onlinePlayer != p1 && onlinePlayer != p2) {
                 onlinePlayer.hideEntity(plugin, entity)
