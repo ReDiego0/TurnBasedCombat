@@ -66,15 +66,16 @@ class SQLManager(private val plugin: TurnBasedCombat) : DatabaseDataSource {
             statement.execute("""
                 CREATE TABLE IF NOT EXISTS tbc_companions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    owner_uuid VARCHAR(36),
-                    species_id VARCHAR(64) NOT NULL,
-                    nickname VARCHAR(32),
-                    level INT DEFAULT 1,
-                    xp DOUBLE DEFAULT 0.0,
-                    current_hp DOUBLE,
-                    stats_json TEXT, 
-                    moves_json TEXT,
-                    is_in_team BOOLEAN DEFAULT 0
+                    owner_uuid VARCHAR(36) NOT NULL,
+                    species_id VARCHAR(255) NOT NULL,
+                    nickname VARCHAR(255) NOT NULL,
+                    level INTEGER NOT NULL,
+                    xp DOUBLE NOT NULL,
+                    current_hp DOUBLE NOT NULL,
+                    stats_json TEXT NOT NULL,
+                    moves_json TEXT NOT NULL,
+                    is_in_team BOOLEAN NOT NULL,
+                    held_item_id VARCHAR(255)
                 );
             """.trimIndent())
 
