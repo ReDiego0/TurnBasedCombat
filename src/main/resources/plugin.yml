@@ -2,6 +2,10 @@ name: TurnBasedCombat
 version: '1.0.0'
 main: org.ReDiego0.turnBasedCombat.TurnBasedCombat
 api-version: '1.21'
+depend:
+  - WorldGuard
+softdepend:
+  - PlaceholderAPI
 commands:
   tbc:
     description: "Comando principal de TurnBasedCombat"

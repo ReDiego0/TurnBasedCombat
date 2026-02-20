@@ -1,0 +1,10 @@
+bosque_oscuro:
+  particle: "ENCHANTMENT_TABLE"
+  encounter_chance: 15.0 # 15% de probabilidad por segundo
+  levels:
+    min: 3
+    max: 6
+  spawns:
+    nexo_fuego_1: 50   # Muy común
+    nexo_agua_1: 30    # Común
+    nexo_planta_1: 5   # Raro

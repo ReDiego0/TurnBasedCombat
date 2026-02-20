@@ -20,6 +20,9 @@ class CombatSession(
     val player2: Duelist,
     private val triggerLocation: Location
 ) {
+    var p1Entity: org.bukkit.entity.Entity? = null
+    var p2Entity: org.bukkit.entity.Entity? = null
+
     val pendingActions: MutableList<TurnAction> = mutableListOf()
 
     var currentState: CombatState? = null
@@ -44,8 +47,8 @@ class CombatSession(
 
         arenaCenter = plugin.arenaManager.getArenaForLocation(triggerLocation)
 
-        p1?.let { setupPlayerForCombat(it, arenaCenter.clone().add(5.0, 0.0, 0.0).apply { yaw = 90f }) }
-        p2?.let { setupPlayerForCombat(it, arenaCenter.clone().add(-5.0, 0.0, 0.0).apply { yaw = -90f }) }
+        p1?.let { setupPlayerForCombat(it, arenaCenter.clone().add(8.0, 0.0, 0.0).apply { yaw = 90f }) }
+        p2?.let { setupPlayerForCombat(it, arenaCenter.clone().add(-8.0, 0.0, 0.0).apply { yaw = -90f }) }
 
         isolatePlayers(p1, p2)
 

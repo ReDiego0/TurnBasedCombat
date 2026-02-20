@@ -13,6 +13,7 @@ repositories {
         name = "papermc-repo"
     }
     maven("https://repo.extendedclip.com/releases/")
+    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
@@ -21,6 +22,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
     compileOnly("me.clip:placeholderapi:2.12.2")
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
 }
 
 tasks {

@@ -28,11 +28,14 @@ class InitializationState(
 
         val visualSpawner = CompanionVisualSpawner(plugin)
 
-        val p1MobLoc = session.arenaCenter.clone().add(2.0, 0.0, 0.0).apply { yaw = 90f }
-        val p2MobLoc = session.arenaCenter.clone().add(-2.0, 0.0, 0.0).apply { yaw = -90f }
+        val p1MobLoc = session.arenaCenter.clone().add(3.0, 0.0, 0.0).apply { yaw = 90f }
+        val p2MobLoc = session.arenaCenter.clone().add(-3.0, 0.0, 0.0).apply { yaw = -90f }
 
         val p1Entity = visualSpawner.spawnCompanion(p1Companion, p1MobLoc, p1Player)
         val p2Entity = visualSpawner.spawnCompanion(p2Companion, p2MobLoc, p2Player)
+
+        session.p1Entity = p1Entity
+        session.p2Entity = p2Entity
 
         session.activeEntities.add(p1Entity)
         session.activeEntities.add(p2Entity)
