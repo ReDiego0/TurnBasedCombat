@@ -8,6 +8,7 @@ import org.ReDiego0.turnBasedCombat.manager.ArenaManager
 import org.ReDiego0.turnBasedCombat.manager.CombatManager
 import org.ReDiego0.turnBasedCombat.manager.DuelistManager
 import org.ReDiego0.turnBasedCombat.manager.ElementManager
+import org.ReDiego0.turnBasedCombat.manager.NpcManager
 import org.ReDiego0.turnBasedCombat.manager.SpeciesManager
 import org.ReDiego0.turnBasedCombat.manager.TechniqueManager
 import org.bukkit.plugin.java.JavaPlugin
@@ -26,6 +27,7 @@ class TurnBasedCombat : JavaPlugin() {
     lateinit var elementManager: ElementManager
     lateinit var speciesManager: SpeciesManager
     lateinit var arenaManager: ArenaManager
+    lateinit var npcManager: NpcManager
 
     override fun onEnable() {
         instance = this
@@ -47,6 +49,7 @@ class TurnBasedCombat : JavaPlugin() {
         speciesManager = SpeciesManager(this)
         elementManager = ElementManager(this)
         arenaManager = ArenaManager(this)
+        npcManager = NpcManager(this)
 
         server.pluginManager.registerEvents(ConnectionListener(duelistManager), this)
         server.pluginManager.registerEvents(CombatInteractionListener(this, combatManager, duelistManager), this)

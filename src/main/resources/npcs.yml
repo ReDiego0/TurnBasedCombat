@@ -1,0 +1,21 @@
+granjero_bob:
+  displayName: "Granjero Bob"
+  aiType: "RANDOM"
+  team:
+    1:
+      speciesId: "nexo_planta_1"
+      level: 3
+    2:
+      speciesId: "nexo_normal_1"
+      level: 4
+
+lider_ignis:
+  displayName: "Maestro de las Llamas"
+  aiType: "AGGRESSIVE"
+  team:
+    1:
+      speciesId: "nexo_fuego_1"
+      level: 10
+    2:
+      speciesId: "nexo_fuego_1"
+      level: 12

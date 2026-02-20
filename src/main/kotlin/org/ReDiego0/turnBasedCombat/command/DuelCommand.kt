@@ -27,10 +27,46 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
         when (args[0].lowercase()) {
             "duel" -> handleDuelRequest(sender, args)
             "accept" -> handleAccept(sender)
+            "iaduel" -> {
+                if (sender.hasPermission("tbc.admin")) handleIaDuel(sender, args)
+            }
             else -> sender.sendMessage(Component.text("Comando desconocido.").color(NamedTextColor.RED))
         }
 
         return true
+    }
+
+    private fun handleIaDuel(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            sender.sendMessage(Component.text("Uso correcto: /tbc iaduel <npc_id> <jugador>").color(NamedTextColor.RED))
+            return
+        }
+
+        val npcId = args[1]
+        val targetName = args[2]
+
+        val targetPlayer = Bukkit.getPlayerExact(targetName)
+        if (targetPlayer == null) {
+            sender.sendMessage(Component.text("Jugador no encontrado.").color(NamedTextColor.RED))
+            return
+        }
+
+        if (plugin.combatManager.isInCombat(targetPlayer.uniqueId)) {
+            sender.sendMessage(Component.text("El jugador ya está en combate.").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetDuelist = plugin.duelistManager.getDuelist(targetPlayer.uniqueId)
+        val npcDuelist = plugin.npcManager.createNpcDuelist(npcId)
+
+        if (targetDuelist == null || npcDuelist == null) {
+            sender.sendMessage(Component.text("Error al cargar los datos del jugador o el NPC no existe.").color(NamedTextColor.RED))
+            return
+        }
+
+        val arenaLocation = targetPlayer.location.clone().apply { pitch = 0f }
+
+        plugin.combatManager.startDuel(targetDuelist, npcDuelist, arenaLocation)
     }
 
     private fun handleDuelRequest(sender: Player, args: Array<String>) {
