@@ -97,7 +97,10 @@ class TurnResolutionState(
                                 session.transitionTo(SwitchCompanionState(plugin, opponent, renderer))
                                 combatEndedOrSwitched = true
                             } else {
-                                session.endCombat(actor)
+                                sendMessageToBoth(session, "¡${actor.name} ha ganado el combate!")
+                                Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                                    session.endCombat(actor)
+                                }, 60L)
                                 combatEndedOrSwitched = true
                             }
                         }
