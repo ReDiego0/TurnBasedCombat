@@ -27,25 +27,41 @@ class MenuListener(private val plugin: TurnBasedCombat) : Listener {
             val holder = inventory.holder as PcMenuHolder
             val duelist = holder.duelist
             val slot = event.rawSlot
+            val currentPage = holder.page
+
+            if (slot == 6) { // Flecha de Atrás
+                if (currentPage > 0) {
+                    PcGUI(plugin).openFor(player, duelist, currentPage - 1)
+                }
+                return
+            }
+
+            if (slot == 8) { // Flecha de Siguiente
+                if (currentPage < 7) {
+                    PcGUI(plugin).openFor(player, duelist, currentPage + 1)
+                }
+                return
+            }
 
             if (slot in 0..5) {
                 if (slot < duelist.team.size) {
                     if (duelist.team.size > 1) {
                         val comp = duelist.team.removeAt(slot)
                         duelist.pcStorage.add(comp)
-                        PcGUI(plugin).render(event.inventory, duelist)
+                        PcGUI(plugin).render(event.inventory, duelist, currentPage)
                     } else {
                         player.sendMessage(Component.text("¡Debes tener al menos un Companion en tu equipo!").color(NamedTextColor.RED))
                     }
                 }
             }
             else if (slot in 9..53) {
-                val pcIndex = slot - 9
+                val pcIndex = (slot - 9) + (currentPage * 45)
+
                 if (pcIndex < duelist.pcStorage.size) {
                     if (duelist.team.size < 6) {
                         val comp = duelist.pcStorage.removeAt(pcIndex)
                         duelist.team.add(comp)
-                        PcGUI(plugin).render(event.inventory, duelist)
+                        PcGUI(plugin).render(event.inventory, duelist, currentPage)
                     } else {
                         player.sendMessage(Component.text("¡Tu equipo ya está lleno! (Máx 6)").color(NamedTextColor.RED))
                     }

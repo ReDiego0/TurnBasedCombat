@@ -11,36 +11,53 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import kotlin.math.min
 
 class PcGUI(private val plugin: TurnBasedCombat) {
 
-    fun openFor(player: Player, duelist: Duelist) {
-        val holder = PcMenuHolder(duelist)
-        val inventory = Bukkit.createInventory(holder, 54, Component.text("Sistema de PC").color(NamedTextColor.DARK_AQUA))
+    fun openFor(player: Player, duelist: Duelist, page: Int = 0) {
+        val holder = PcMenuHolder(duelist, page)
+        val inventory = Bukkit.createInventory(holder, 54, Component.text("Sistema de PC - Pág ${page + 1}").color(NamedTextColor.DARK_AQUA))
         holder.setInventory(inventory)
 
-        render(inventory, duelist)
+        render(inventory, duelist, page)
         player.openInventory(inventory)
     }
 
-    fun render(inventory: Inventory, duelist: Duelist) {
+    fun render(inventory: Inventory, duelist: Duelist, page: Int) {
         inventory.clear()
-
-        val glass = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
-        val meta = glass.itemMeta
-        meta.displayName(Component.text(" "))
-        glass.itemMeta = meta
-        for (i in 6..8) inventory.setItem(i, glass)
 
         for ((index, companion) in duelist.team.withIndex()) {
             if (index > 5) break
             inventory.setItem(index, buildCompanionItem(companion))
         }
 
-        for ((index, companion) in duelist.pcStorage.withIndex()) {
-            val slot = index + 9
-            if (slot > 53) break
-            inventory.setItem(slot, buildCompanionItem(companion))
+        val prevItem = ItemStack(Material.ARROW)
+        val prevMeta = prevItem.itemMeta
+        prevMeta.displayName(Component.text("<- Página Anterior").color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false))
+        prevItem.itemMeta = prevMeta
+        inventory.setItem(6, prevItem)
+
+        val infoItem = ItemStack(Material.BOOK)
+        val infoMeta = infoItem.itemMeta
+        infoMeta.displayName(Component.text("Página ${page + 1} / 8").color(NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false))
+        infoItem.itemMeta = infoMeta
+        inventory.setItem(7, infoItem)
+
+        val nextItem = ItemStack(Material.ARROW)
+        val nextMeta = nextItem.itemMeta
+        nextMeta.displayName(Component.text("Página Siguiente ->").color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false))
+        nextItem.itemMeta = nextMeta
+        inventory.setItem(8, nextItem)
+
+        val startIndex = page * 45
+        val endIndex = min(startIndex + 45, duelist.pcStorage.size)
+
+        if (startIndex < duelist.pcStorage.size) {
+            val pageCompanions = duelist.pcStorage.subList(startIndex, endIndex)
+            for ((index, companion) in pageCompanions.withIndex()) {
+                inventory.setItem(index + 9, buildCompanionItem(companion))
+            }
         }
     }
 

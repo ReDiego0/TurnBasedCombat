@@ -97,14 +97,34 @@ class CombatSession(
         activeEntities.forEach { it.remove() }
         activeEntities.clear()
 
-        val p1 = Bukkit.getPlayer(player1.uuid)
-        val p2 = Bukkit.getPlayer(player2.uuid)
+        val p1Bukkit = Bukkit.getPlayer(player1.uuid)
+        val p2Bukkit = Bukkit.getPlayer(player2.uuid)
 
-        p1?.let { loc -> p1OriginalLoc?.let { restorePlayer(loc, it) } }
-        p2?.let { loc -> p2OriginalLoc?.let { restorePlayer(loc, it) } }
+        if (!player1.isWild) {
+            if (!player1.hasValidTeam()) {
+                player1.team.forEach { it.stats.hp = it.stats.maxHp; it.activeStatus = null }
+                p1Bukkit?.let {
+                    restorePlayer(it, it.world.spawnLocation)
+                    it.sendMessage(Component.text("¡Todo tu equipo se ha debilitado! Has escapado al centro de curación.").color(NamedTextColor.RED))
+                }
+            } else {
+                p1Bukkit?.let { loc -> p1OriginalLoc?.let { restorePlayer(loc, it) } }
+            }
+        }
 
-        reintegratePlayers(p1, p2)
+        if (!player2.isWild) {
+            if (!player2.hasValidTeam()) {
+                player2.team.forEach { it.stats.hp = it.stats.maxHp; it.activeStatus = null }
+                p2Bukkit?.let {
+                    restorePlayer(it, it.world.spawnLocation)
+                    it.sendMessage(Component.text("¡Todo tu equipo se ha debilitado! Has escapado al centro de curación.").color(NamedTextColor.RED))
+                }
+            } else {
+                p2Bukkit?.let { loc -> p2OriginalLoc?.let { restorePlayer(loc, it) } }
+            }
+        }
 
+        reintegratePlayers(p1Bukkit, p2Bukkit)
         plugin.combatManager.removeSession(this)
     }
 

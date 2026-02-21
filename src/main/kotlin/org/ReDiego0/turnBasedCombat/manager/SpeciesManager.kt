@@ -2,6 +2,7 @@ package org.ReDiego0.turnBasedCombat.manager
 
 import org.ReDiego0.turnBasedCombat.TurnBasedCombat
 import org.ReDiego0.turnBasedCombat.model.CombatStats
+import org.ReDiego0.turnBasedCombat.model.EvolutionRequirement
 import org.ReDiego0.turnBasedCombat.model.SpeciesTemplate
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
@@ -50,7 +51,17 @@ class SpeciesManager(private val plugin: TurnBasedCombat) {
                 }
             }
 
-            species[key] = SpeciesTemplate(key, displayName, elements, baseStats, learnset, modelId)
+            val evolutions = mutableMapOf<String, EvolutionRequirement>()
+            val evoSection = config.getConfigurationSection("$key.evolutions")
+            if (evoSection != null) {
+                for (targetId in evoSection.getKeys(false)) {
+                    val reqLevel = evoSection.getInt("$targetId.level", 0)
+                    val reqItem = evoSection.getString("$targetId.item")
+                    evolutions[targetId] = EvolutionRequirement(reqLevel, reqItem)
+                }
+            }
+
+            species[key] = SpeciesTemplate(key, displayName, elements, baseStats, learnset, modelId, catchRate, evolutions)
         }
 
         plugin.logger.info("Especies cargadas: ${species.size}")

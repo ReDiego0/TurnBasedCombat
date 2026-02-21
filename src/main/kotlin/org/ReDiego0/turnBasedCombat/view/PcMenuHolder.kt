@@ -4,7 +4,7 @@ import org.ReDiego0.turnBasedCombat.model.Duelist
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 
-class PcMenuHolder(val duelist: Duelist) : InventoryHolder {
+class PcMenuHolder(val duelist: Duelist, var page: Int = 0) : InventoryHolder {
     private lateinit var inventory: Inventory
 
     override fun getInventory(): Inventory {

@@ -36,11 +36,11 @@ class ExperienceManager(private val plugin: TurnBasedCombat) {
         companion.stats.speed = (species.baseStats.speed * scaleFactor).toInt()
 
         val oldHp = companion.stats.hp
-        companion.stats.hp = species.baseStats.hp * scaleFactor
+        companion.stats.maxHp = species.baseStats.hp * scaleFactor
 
-        val hpDifference = companion.stats.hp - oldHp
+        val hpDifference = companion.stats.maxHp - species.baseStats.hp * (1.0 + ((companion.level - 1) * 0.05))
         if (hpDifference > 0) {
-            companion.stats.hp = oldHp + hpDifference
+            companion.stats.hp += hpDifference
         }
 
         player?.sendMessage(Component.text("¡${companion.nickname} ha subido al nivel ${companion.level}!").color(NamedTextColor.GOLD))
@@ -54,11 +54,38 @@ class ExperienceManager(private val plugin: TurnBasedCombat) {
                     player?.sendMessage(Component.text("¡${companion.nickname} ha aprendido $techniqueName!").color(NamedTextColor.AQUA))
                 } else if (!companion.moves.contains(moveId)) {
                     val techniqueName = plugin.techniqueManager.getTechnique(moveId)?.displayName ?: moveId
-                    player?.sendMessage(Component.text("${companion.nickname} quiere aprender $techniqueName, pero ya conoce 4 técnicas. Revisa tu Buzón de Entrenamiento.").color(NamedTextColor.YELLOW))
-
-                    // añadir el moveId a la lista pending_moves en la base de datos
+                    player?.sendMessage(Component.text("${companion.nickname} quiere aprender $techniqueName, pero ya conoce 4 técnicas.").color(NamedTextColor.YELLOW))
                 }
             }
         }
+
+        species.evolutions.forEach { (targetId, req) ->
+            if (req.item == null && req.level > 0 && companion.level >= req.level) {
+                evolveCompanion(companion, targetId, player)
+            }
+        }
+    }
+
+    fun evolveCompanion(companion: Companion, targetSpeciesId: String, player: Player?) {
+        val targetSpecies = plugin.speciesManager.getSpecies(targetSpeciesId) ?: return
+        val oldSpecies = plugin.speciesManager.getSpecies(companion.speciesId)
+
+        if (companion.nickname == oldSpecies?.displayName) {
+            companion.nickname = targetSpecies.displayName
+        }
+
+        companion.speciesId = targetSpeciesId
+
+        val scaleFactor = 1.0 + (companion.level * 0.05)
+
+        val hpPercentage = if (companion.stats.maxHp > 0) companion.stats.hp / companion.stats.maxHp else 1.0
+        companion.stats.maxHp = targetSpecies.baseStats.hp * scaleFactor
+        companion.stats.hp = companion.stats.maxHp * hpPercentage
+
+        companion.stats.attack = (targetSpecies.baseStats.attack * scaleFactor).toInt()
+        companion.stats.defense = (targetSpecies.baseStats.defense * scaleFactor).toInt()
+        companion.stats.speed = (targetSpecies.baseStats.speed * scaleFactor).toInt()
+
+        player?.sendMessage(Component.text("¡Qué es esto! ¡Tu Companion ha evolucionado a ${targetSpecies.displayName}!").color(NamedTextColor.LIGHT_PURPLE))
     }
 }

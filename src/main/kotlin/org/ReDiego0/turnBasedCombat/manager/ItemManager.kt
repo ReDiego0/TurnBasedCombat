@@ -42,6 +42,21 @@ class ItemManager(private val plugin: TurnBasedCombat) {
         val item = getItem(itemId) ?: return false
         val companion = duelist.team.getOrNull(targetIndex) ?: return false
 
+        val species = plugin.speciesManager.getSpecies(companion.speciesId)
+        if (species != null) {
+            for ((targetId, req) in species.evolutions) {
+                if (req.item == itemId) {
+                    if (req.level > 0 && companion.level < req.level) {
+                        player.sendMessage(Component.text("¡${companion.nickname} necesita ser nivel ${req.level} para usar esto!").color(NamedTextColor.RED))
+                        return false
+                    }
+                    plugin.experienceManager.evolveCompanion(companion, targetId, player)
+                    consumeItem(duelist, itemId)
+                    return true
+                }
+            }
+        }
+
         when (item.type) {
             ItemType.HEAL_HP -> {
                 if (companion.stats.hp >= companion.stats.maxHp) {
@@ -53,20 +68,12 @@ class ItemManager(private val plugin: TurnBasedCombat) {
                 player.sendMessage(Component.text("Has curado a ${companion.nickname} con ${item.displayName}.").color(NamedTextColor.GREEN))
             }
             ItemType.HEAL_TEAM -> {
-                duelist.team.forEach { it.stats.hp = it.stats.maxHp }
-                player.sendMessage(Component.text("¡El equipo entero ha sido curado con ${item.displayName}!").color(NamedTextColor.GREEN))
+                duelist.team.forEach { it.stats.hp = it.stats.maxHp; it.activeStatus = null }
+                player.sendMessage(Component.text("¡El equipo entero ha sido curado!").color(NamedTextColor.GREEN))
             }
             ItemType.LEVEL_UP -> {
-                companion.level += 1
-                val species = plugin.speciesManager.getSpecies(companion.speciesId)
-                if (species != null) {
-                    val scaleFactor = 1.0 + (companion.level * 0.05)
-                    companion.stats.maxHp = species.baseStats.hp * scaleFactor
-                    companion.stats.attack = (species.baseStats.attack * scaleFactor).toInt()
-                    companion.stats.defense = (species.baseStats.defense * scaleFactor).toInt()
-                    companion.stats.speed = (species.baseStats.speed * scaleFactor).toInt()
-                }
-                player.sendMessage(Component.text("¡${companion.nickname} subió al nivel ${companion.level} con ${item.displayName}!").color(NamedTextColor.GOLD))
+                plugin.experienceManager.awardXp(companion, companion, null)
+                player.sendMessage(Component.text("¡${companion.nickname} comió ${item.displayName}!").color(NamedTextColor.GOLD))
             }
             ItemType.TEACH_TECHNIQUE -> {
                 val tech = item.techniqueId ?: return false
@@ -87,10 +94,13 @@ class ItemManager(private val plugin: TurnBasedCombat) {
             }
         }
 
+        consumeItem(duelist, itemId)
+        return true
+    }
+
+    private fun consumeItem(duelist: Duelist, itemId: String) {
         val count = duelist.bag[itemId] ?: 0
         if (count > 1) duelist.bag[itemId] = count - 1
         else duelist.bag.remove(itemId)
-
-        return true
     }
 }
