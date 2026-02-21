@@ -31,7 +31,7 @@ class MenuListener(private val plugin: TurnBasedCombat) : Listener {
             val slot = event.rawSlot
 
             if (slot == 45) {
-                org.ReDiego0.turnBasedCombat.view.MailboxGUI(plugin).openFor(player, holder.duelist)
+                MailboxGUI(plugin).openFor(player, holder.duelist)
                 return
             }
 
@@ -50,7 +50,7 @@ class MenuListener(private val plugin: TurnBasedCombat) : Listener {
 
                     holder.activeMail.isClaimed = true
                     player.sendMessage(Component.text("¡Puf! ${holder.companion.nickname} olvidó el movimiento antiguo y aprendió ${plugin.techniqueManager.getTechnique(holder.newTechniqueId)?.displayName}.").color(NamedTextColor.GREEN))
-                    org.ReDiego0.turnBasedCombat.view.MailboxGUI(plugin).openFor(player, holder.duelist)
+                    MailboxGUI(plugin).openFor(player, holder.duelist)
                 }
                 else if (slot in listOf(24, 25, 26, 33, 35)) {
                     holder.confirmMoveIndex = null
