@@ -34,9 +34,16 @@ class TechniqueManager(private val plugin: TurnBasedCombat) {
 
             val power = config.getInt("$key.power", 40)
             val accuracy = config.getInt("$key.accuracy", 100)
+            val maxPP = config.getInt("$key.pp", 20)
             val statusChance = config.getDouble("$key.applyStatusChance", 0.0)
 
-            techniques[key] = Technique(key, displayName, elementId, category, power, accuracy, statusChance)
+            val statusPower = config.getInt("$key.statusPower", 0)
+            val statusDuration = config.getInt("$key.statusDuration", 3)
+
+            techniques[key] = Technique(
+                key, displayName, elementId, category, power,
+                accuracy, maxPP, statusChance, statusPower, statusDuration
+            )
         }
 
         plugin.logger.info("Técnicas cargadas: ${techniques.size}")

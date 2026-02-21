@@ -2,6 +2,7 @@ package org.ReDiego0.turnBasedCombat.manager
 
 import org.ReDiego0.turnBasedCombat.TurnBasedCombat
 import org.ReDiego0.turnBasedCombat.model.Element
+import org.ReDiego0.turnBasedCombat.model.StatusEffectTemplate
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
 
@@ -28,9 +29,18 @@ class ElementManager(private val plugin: TurnBasedCombat) {
             val weaknesses = config.getStringList("$key.weaknesses").toSet()
             val resistances = config.getStringList("$key.resistances").toSet()
             val immunities = config.getStringList("$key.immunities").toSet()
-            val status = config.getString("$key.nativeStatusEffect")
 
-            elements[key] = Element(key, displayName, weaknesses, resistances, immunities, status)
+            val statusSection = config.getConfigurationSection("$key.status")
+            var statusEffect: StatusEffectTemplate? = null
+
+            if (statusSection != null) {
+                val sId = statusSection.getString("id") ?: "${key}_status"
+                val sName = statusSection.getString("displayName") ?: "Estado Alterado"
+                val sMechanics = statusSection.getStringList("mechanics")
+                statusEffect = StatusEffectTemplate(sId, sName, sMechanics)
+            }
+
+            elements[key] = Element(key, displayName, weaknesses, resistances, immunities, statusEffect)
         }
 
         plugin.logger.info("Elementos cargados: ${elements.size}")

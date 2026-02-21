@@ -72,10 +72,36 @@ class TurnResolutionState(
         when (action.type) {
             ActionType.FIGHT -> {
                 val technique = plugin.techniqueManager.getTechnique(action.value)
-                if (technique != null && actorCompanion != null) {
-                    val defenderCompanion = opponent.team.firstOrNull { !it.isFainted() }
-                    if (defenderCompanion != null) {
+                val defenderCompanion = opponent.team.firstOrNull { !it.isFainted() }
 
+                if (technique != null && actorCompanion != null && defenderCompanion != null) {
+
+                    val currentPP = actorCompanion.getRemainingPP(technique.id, technique.maxPP)
+                    if (currentPP <= 0) {
+                        sendMessageToBoth(session, "¡${actorCompanion.nickname} intentó usar ${technique.displayName} pero no le quedan PP!")
+                        Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                            executeActionsSequentially(session, actions, currentIndex + 1)
+                        }, 30L)
+                        return
+                    }
+                    actorCompanion.movePP[technique.id] = currentPP - 1
+
+                    var attackCancelled = false
+                    if (actorCompanion.activeStatus?.mechanics?.contains("confused") == true) {
+                        sendMessageToBoth(session, "¡${actorCompanion.nickname} está confundido!")
+                        if (Random.nextDouble() < 0.5) {
+                            val selfDamage = (actorCompanion.stats.maxHp * 0.1).toInt()
+                            actorCompanion.stats.hp -= selfDamage
+                            sendMessageToBoth(session, "¡Tan confundido que se hirió a sí mismo!")
+                            attackCancelled = true
+
+                            if (handleFaint(session, actorCompanion, actor, defenderCompanion, opponent)) {
+                                return
+                            }
+                        }
+                    }
+
+                    if (!attackCancelled && !actorCompanion.isFainted()) {
                         val isPhysical = technique.category == TechniqueCategory.PHYSICAL
                         val attackStat = if (isPhysical) actorCompanion.stats.attack else actorCompanion.stats.attack
                         val defenseStat = if (isPhysical) defenderCompanion.stats.defense else defenderCompanion.stats.defense
@@ -89,20 +115,46 @@ class TurnResolutionState(
 
                         sendMessageToBoth(session, "¡${actorCompanion.nickname} usó ${technique.displayName}!")
 
-                        if (defenderCompanion.isFainted()) {
-                            val activeBukkitPlayer = Bukkit.getPlayer(actor.uuid)
-                            plugin.experienceManager.awardXp(actorCompanion, defenderCompanion, activeBukkitPlayer)
+                        if (!defenderCompanion.isFainted() && defenderCompanion.activeStatus == null) {
+                            if (technique.applyStatusChance > 0.0 && Random.nextDouble() < technique.applyStatusChance) {
+                                val attackElement = plugin.elementManager.getElement(technique.elementId)
+                                val statusTemplate = attackElement?.statusEffect
 
-                            if (opponent.hasValidTeam()) {
-                                session.transitionTo(SwitchCompanionState(plugin, opponent, renderer))
-                                combatEndedOrSwitched = true
-                            } else {
-                                sendMessageToBoth(session, "¡${actor.name} ha ganado el combate!")
-                                Bukkit.getScheduler().runTaskLater(plugin, Runnable {
-                                    session.endCombat(actor)
-                                }, 60L)
-                                combatEndedOrSwitched = true
+                                if (statusTemplate != null) {
+                                    defenderCompanion.activeStatus = org.ReDiego0.turnBasedCombat.model.ActiveStatus(
+                                        id = statusTemplate.id,
+                                        displayName = statusTemplate.displayName,
+                                        mechanics = statusTemplate.mechanics,
+                                        power = technique.statusPower,
+                                        duration = technique.statusDuration
+                                    )
+                                    sendMessageToBoth(session, "¡${defenderCompanion.nickname} sufre de ${statusTemplate.displayName}!")
+                                }
                             }
+                        }
+
+                        if (handleFaint(session, defenderCompanion, opponent, actorCompanion, actor)) {
+                            return
+                        }
+                    }
+
+                    if (!actorCompanion.isFainted() && actorCompanion.activeStatus != null) {
+                        val status = actorCompanion.activeStatus!!
+
+                        if (status.mechanics.contains("continuedDamage")) {
+                            actorCompanion.stats.hp -= status.power
+                            if (actorCompanion.stats.hp < 0.0) actorCompanion.stats.hp = 0.0
+                            sendMessageToBoth(session, "¡${actorCompanion.nickname} sufre daño por ${status.displayName}!")
+
+                            if (handleFaint(session, actorCompanion, actor, defenderCompanion, opponent)) {
+                                return
+                            }
+                        }
+
+                        status.duration -= 1
+                        if (status.duration <= 0 && !actorCompanion.isFainted()) {
+                            sendMessageToBoth(session, "¡${actorCompanion.nickname} se curó de ${status.displayName}!")
+                            actorCompanion.activeStatus = null
                         }
                     }
                 }
@@ -140,6 +192,31 @@ class TurnResolutionState(
             Bukkit.getScheduler().runTaskLater(plugin, Runnable {
                 executeActionsSequentially(session, actions, currentIndex + 1)
             }, 30L)
+        }
+    }
+
+    private fun handleFaint(
+        session: CombatSession,
+        faintedCompanion: org.ReDiego0.turnBasedCombat.model.Companion,
+        faintedOwner: Duelist,
+        victorCompanion: org.ReDiego0.turnBasedCombat.model.Companion,
+        victorOwner: Duelist
+    ): Boolean {
+        if (!faintedCompanion.isFainted()) return false
+
+        val activeBukkitPlayer = Bukkit.getPlayer(victorOwner.uuid)
+        plugin.experienceManager.awardXp(victorCompanion, faintedCompanion, activeBukkitPlayer)
+
+        if (faintedOwner.hasValidTeam()) {
+            session.transitionTo(SwitchCompanionState(plugin, faintedOwner, renderer))
+            return true
+        } else {
+            sendMessageToBoth(session, "¡${victorOwner.name} ha ganado el combate!")
+
+            Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                session.endCombat(victorOwner)
+            }, 60L)
+            return true
         }
     }
 
