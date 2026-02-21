@@ -13,5 +13,8 @@ data class Technique(
     val category: TechniqueCategory,
     val power: Int,
     val accuracy: Int,
-    val applyStatusChance: Double
+    val maxPP: Int,
+    val applyStatusChance: Double,
+    val statusPower: Int,
+    val statusDuration: Int
 )

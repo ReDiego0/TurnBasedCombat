@@ -6,5 +6,5 @@ data class Element(
     val weaknesses: Set<String>,
     val resistances: Set<String>,
     val immunities: Set<String>,
-    val nativeStatusEffect: String?
+    val statusEffect: StatusEffectTemplate? = null
 )
