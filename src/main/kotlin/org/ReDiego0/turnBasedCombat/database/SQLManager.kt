@@ -74,6 +74,8 @@ class SQLManager(private val plugin: TurnBasedCombat) : DatabaseDataSource {
                     current_hp DOUBLE NOT NULL,
                     stats_json TEXT NOT NULL,
                     moves_json TEXT NOT NULL,
+                    move_pp_json TEXT,
+                    active_status_json TEXT,
                     is_in_team BOOLEAN NOT NULL,
                     held_item_id VARCHAR(255)
                 );

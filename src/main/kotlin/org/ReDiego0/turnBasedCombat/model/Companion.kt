@@ -3,7 +3,7 @@ package org.ReDiego0.turnBasedCombat.model
 import java.util.UUID
 
 data class Companion(
-    val id: Int,
+    var id: Int,
     var ownerUuid: UUID,
     var speciesId: String,
     var nickname: String?,

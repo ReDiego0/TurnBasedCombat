@@ -230,15 +230,28 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
 
         var curados = 0
         for (companion in duelist.team) {
+            var needsHeal = false
+
             if (companion.stats.hp < companion.stats.maxHp) {
                 companion.stats.hp = companion.stats.maxHp
-                curados++
+                needsHeal = true
             }
+
+            if (companion.activeStatus != null) {
+                companion.activeStatus = null
+                needsHeal = true
+            }
+
+            if (companion.movePP.isNotEmpty()) {
+                companion.movePP.clear()
+                needsHeal = true
+            }
+
+            if (needsHeal) curados++
         }
 
-        sender.sendMessage(Component.text("Has curado el equipo de ${targetPlayer.name} ($curados Companions curados).").color(NamedTextColor.GREEN))
-
-        targetPlayer.sendMessage(Component.text("¡Tus Companions han sido completamente curados!").color(NamedTextColor.GREEN))
+        sender.sendMessage(Component.text("[Administración] Has curado el equipo de ${targetPlayer.name} ($curados Companions restaurados).").color(NamedTextColor.GREEN))
+        targetPlayer.sendMessage(Component.text("¡Todo tu equipo ha recuperado su HP, PP y salud!").color(NamedTextColor.GREEN))
     }
 
     private fun handleIaDuel(sender: CommandSender, args: Array<String>) {

@@ -3,11 +3,13 @@ package org.ReDiego0.turnBasedCombat.manager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.ReDiego0.turnBasedCombat.TurnBasedCombat
+import org.ReDiego0.turnBasedCombat.model.ActiveStatus
 import org.ReDiego0.turnBasedCombat.model.CombatStats
 import org.ReDiego0.turnBasedCombat.model.Companion
 import org.ReDiego0.turnBasedCombat.model.Duelist
 import org.bukkit.Bukkit
 import java.sql.SQLException
+import java.sql.Statement
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CompletableFuture
@@ -62,7 +64,6 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
         }
     }
 
-
     private fun loadCompanionsForDuelist(uuid: UUID, duelist: Duelist) {
         plugin.database.getConnection().use { conn ->
             val stmt = conn.prepareStatement("SELECT * FROM tbc_companions WHERE owner_uuid = ?")
@@ -72,10 +73,17 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
             while (rs.next()) {
                 val statsJson = rs.getString("stats_json")
                 val movesJson = rs.getString("moves_json")
+                val movePpJson = rs.getString("move_pp_json")
+                val activeStatusJson = rs.getString("active_status_json")
 
                 val stats = gson.fromJson(statsJson, CombatStats::class.java)
+
                 val movesType = object : TypeToken<MutableList<String>>() {}.type
                 val moves: MutableList<String> = gson.fromJson(movesJson, movesType)
+
+                val movePpType = object : TypeToken<MutableMap<String, Int>>() {}.type
+                val movePP: MutableMap<String, Int> = if (movePpJson != null) gson.fromJson(movePpJson, movePpType) else mutableMapOf()
+                val activeStatus: ActiveStatus? = if (activeStatusJson != null) gson.fromJson(activeStatusJson, ActiveStatus::class.java) else null
 
                 val companion = Companion(
                     id = rs.getInt("id"),
@@ -86,6 +94,8 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
                     xp = rs.getDouble("xp"),
                     stats = stats,
                     moves = moves,
+                    movePP = movePP,
+                    activeStatus = activeStatus,
                     heldItem = rs.getString("held_item_id")
                 )
 
@@ -110,8 +120,9 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
                     stmt.setInt(1, duelist.currency)
                     stmt.setString(2, uuid.toString())
                     stmt.executeUpdate()
-                    saveCompanionList(duelist.team, true, conn)
-                    saveCompanionList(duelist.pcStorage, false, conn)
+
+                    saveCompanionList(duelist.team, true, conn, uuid)
+                    saveCompanionList(duelist.pcStorage, false, conn, uuid)
                 }
             } catch (e: SQLException) {
                 plugin.logger.severe("Error guardando datos de ${duelist.name}: ${e.message}")
@@ -121,27 +132,64 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
         })
     }
 
-    private fun saveCompanionList(list: List<Companion>, inTeam: Boolean, conn: java.sql.Connection) {
-        val sql = """
+    private fun saveCompanionList(list: List<Companion>, inTeam: Boolean, conn: java.sql.Connection, ownerUuid: UUID) {
+        val updateSql = """
             UPDATE tbc_companions SET 
             nickname = ?, level = ?, xp = ?, current_hp = ?, 
-            stats_json = ?, moves_json = ?, is_in_team = ?, held_item_id = ?
+            stats_json = ?, moves_json = ?, is_in_team = ?, held_item_id = ?,
+            move_pp_json = ?, active_status_json = ?
             WHERE id = ?
         """
-        val stmt = conn.prepareStatement(sql)
+
+        val insertSql = """
+            INSERT INTO tbc_companions 
+            (owner_uuid, species_id, nickname, level, xp, current_hp, stats_json, moves_json, is_in_team, held_item_id, move_pp_json, active_status_json) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+
+        val updateStmt = conn.prepareStatement(updateSql)
+        val insertStmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)
 
         for (comp in list) {
-            stmt.setString(1, comp.nickname)
-            stmt.setInt(2, comp.level)
-            stmt.setDouble(3, comp.xp)
-            stmt.setDouble(4, comp.stats.hp) // Guardamos HP actual
-            stmt.setString(5, gson.toJson(comp.stats))
-            stmt.setString(6, gson.toJson(comp.moves))
-            stmt.setBoolean(7, inTeam)
-            stmt.setString(8, comp.heldItem)
-            stmt.setInt(9, comp.id)
-            stmt.addBatch()
+            val statsJson = gson.toJson(comp.stats)
+            val movesJson = gson.toJson(comp.moves)
+            val movePpJson = gson.toJson(comp.movePP)
+            val statusJson = if (comp.activeStatus != null) gson.toJson(comp.activeStatus) else null
+
+            if (comp.id <= 0) {
+                insertStmt.setString(1, ownerUuid.toString())
+                insertStmt.setString(2, comp.speciesId)
+                insertStmt.setString(3, comp.nickname ?: comp.speciesId)
+                insertStmt.setInt(4, comp.level)
+                insertStmt.setDouble(5, comp.xp)
+                insertStmt.setDouble(6, comp.stats.hp)
+                insertStmt.setString(7, statsJson)
+                insertStmt.setString(8, movesJson)
+                insertStmt.setBoolean(9, inTeam)
+                insertStmt.setString(10, comp.heldItem)
+                insertStmt.setString(11, movePpJson)
+                insertStmt.setString(12, statusJson)
+                insertStmt.executeUpdate()
+
+                val generatedKeys = insertStmt.generatedKeys
+                if (generatedKeys.next()) {
+                    comp.id = generatedKeys.getInt(1)
+                }
+            } else {
+                updateStmt.setString(1, comp.nickname)
+                updateStmt.setInt(2, comp.level)
+                updateStmt.setDouble(3, comp.xp)
+                updateStmt.setDouble(4, comp.stats.hp)
+                updateStmt.setString(5, statsJson)
+                updateStmt.setString(6, movesJson)
+                updateStmt.setBoolean(7, inTeam)
+                updateStmt.setString(8, comp.heldItem)
+                updateStmt.setString(9, movePpJson)
+                updateStmt.setString(10, statusJson)
+                updateStmt.setInt(11, comp.id)
+                updateStmt.addBatch()
+            }
         }
-        stmt.executeBatch()
+        updateStmt.executeBatch()
     }
 }
