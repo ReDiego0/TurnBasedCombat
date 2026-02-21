@@ -7,6 +7,7 @@ import org.ReDiego0.turnBasedCombat.model.ActiveStatus
 import org.ReDiego0.turnBasedCombat.model.CombatStats
 import org.ReDiego0.turnBasedCombat.model.Companion
 import org.ReDiego0.turnBasedCombat.model.Duelist
+import org.ReDiego0.turnBasedCombat.model.MailMessage
 import org.bukkit.Bukkit
 import java.sql.SQLException
 import java.sql.Statement
@@ -33,11 +34,17 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
 
                     if (rs.next()) {
                         val currency = rs.getInt("currency")
-                        val wins = rs.getInt("wins")
-                        val losses = rs.getInt("losses")
+                        // val wins = rs.getInt("wins")
+                        // val losses = rs.getInt("losses")
+                        val mailboxJson = rs.getString("mailbox_json")
 
                         duelist = Duelist(uuid, name).apply {
                             this.currency = currency
+                            if (mailboxJson != null) {
+                                val mailType = object : TypeToken<MutableList<MailMessage>>() {}.type
+                                val mails: MutableList<MailMessage> = gson.fromJson(mailboxJson, mailType)
+                                this.mailbox.addAll(mails)
+                            }
                         }
                     } else {
                         val insert = conn.prepareStatement(
@@ -115,10 +122,11 @@ class DuelistManager(private val plugin: TurnBasedCombat) {
             try {
                 plugin.database.getConnection().use { conn ->
                     val stmt = conn.prepareStatement(
-                        "UPDATE tbc_duelists SET currency = ? WHERE uuid = ?"
+                        "UPDATE tbc_duelists SET currency = ?, mailbox_json = ? WHERE uuid = ?"
                     )
                     stmt.setInt(1, duelist.currency)
-                    stmt.setString(2, uuid.toString())
+                    stmt.setString(2, gson.toJson(duelist.mailbox))
+                    stmt.setString(3, uuid.toString())
                     stmt.executeUpdate()
 
                     saveCompanionList(duelist.team, true, conn, uuid)

@@ -57,7 +57,8 @@ class SQLManager(private val plugin: TurnBasedCombat) : DatabaseDataSource {
                     currency INT DEFAULT 0,
                     active_team_id INT DEFAULT 0,
                     wins INT DEFAULT 0,
-                    losses INT DEFAULT 0
+                    losses INT DEFAULT 0,
+                    mailbox_json TEXT
                 );
             """.trimIndent())
 

@@ -4,6 +4,8 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import org.ReDiego0.turnBasedCombat.TurnBasedCombat
+import org.ReDiego0.turnBasedCombat.model.MailMessage
+import org.ReDiego0.turnBasedCombat.model.MailType
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -17,7 +19,14 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
     private val pendingRequests = ConcurrentHashMap<UUID, UUID>()
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<String>): Boolean {
-        if (sender !is Player) return true
+        if (sender !is Player) {
+            if (args.isNotEmpty() && (args[0].lowercase() == "sendmail" || args[0].lowercase() == "sendreward")) {
+                if (args[0].lowercase() == "sendmail") handleSendMail(sender, args)
+                if (args[0].lowercase() == "sendreward") handleSendReward(sender, args)
+                return true
+            }
+            return true
+        }
 
         if (args.isEmpty()) {
             sender.sendMessage(Component.text("Uso: /tbc duel <jugador> o /tbc accept").color(NamedTextColor.RED))
@@ -29,30 +38,176 @@ class DuelCommand(private val plugin: TurnBasedCombat) : CommandExecutor {
             "accept" -> handleAccept(sender)
             "team" -> handleTeam(sender)
             "bag" -> handleBag(sender)
+            "mailbox", "buzon" -> handleMailbox(sender)
 
             "giveitem" -> {
                 if (sender.hasPermission("tbc.admin")) handleGiveItem(sender, args)
             }
-
             "iaduel" -> {
                 if (sender.hasPermission("tbc.admin")) handleIaDuel(sender, args)
             }
-
             "givecompanion" -> {
                 if (sender.hasPermission("tbc.admin")) handleGiveCompanion(sender, args)
             }
-
             "heal" -> {
                 if (sender.hasPermission("tbc.admin")) handleHeal(sender, args)
             }
-
             "pc" -> {
                 if (sender.hasPermission("tbc.admin")) handlePc(sender, args)
+            }
+            "sendmail" -> {
+                if (sender.hasPermission("tbc.admin")) handleSendMail(sender, args)
+            }
+            "sendreward" -> {
+                if (sender.hasPermission("tbc.admin")) handleSendReward(sender, args)
             }
             else -> sender.sendMessage(Component.text("Comando desconocido.").color(NamedTextColor.RED))
         }
 
         return true
+    }
+
+    private fun handleMailbox(sender: Player) {
+        val duelist = plugin.duelistManager.getDuelist(sender.uniqueId)
+        if (duelist == null) {
+            sender.sendMessage(Component.text("Error al cargar los datos de tu perfil.").color(NamedTextColor.RED))
+            return
+        }
+
+        if (plugin.combatManager.isInCombat(sender.uniqueId)) {
+            sender.sendMessage(Component.text("No puedes revisar tu correo mientras estás en combate.").color(NamedTextColor.RED))
+            return
+        }
+
+        val gui = org.ReDiego0.turnBasedCombat.view.MailboxGUI(plugin)
+        gui.openFor(sender, duelist)
+    }
+
+    private fun handleSendMail(sender: CommandSender, args: Array<String>) {
+        if (args.size < 4) {
+            sender.sendMessage(Component.text("Uso: /tbc sendmail <jugador|online|all> <firma:true|false> <mensaje...>").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetType = args[1].lowercase()
+        val showAdmin = args[2].toBooleanStrictOrNull() ?: false
+        var messageBody = args.drop(3).joinToString(" ")
+
+        if (showAdmin) {
+            val senderName = if (sender is Player) sender.name else "Administración"
+            messageBody += "\n\n- Atte: $senderName"
+        }
+
+        val mailTemplate = MailMessage(
+            type = MailType.INFO,
+            title = "Mensaje de Administración",
+            body = messageBody
+        )
+
+        distributeMail(sender, targetType, mailTemplate)
+    }
+
+    private fun handleSendReward(sender: CommandSender, args: Array<String>) {
+        if (args.size < 5) {
+            sender.sendMessage(Component.text("Uso: /tbc sendreward <jugador|online|all> <item:cant,item:cant...> <firma:true|false> <mensaje...>").color(NamedTextColor.RED))
+            return
+        }
+
+        val targetType = args[1].lowercase()
+        val itemsString = args[2] // Formato esperado: pocion:5,piedra_fuego:1
+        val showAdmin = args[3].toBooleanStrictOrNull() ?: false
+        var messageBody = args.drop(4).joinToString(" ")
+
+        val attachedItems = mutableMapOf<String, Int>()
+        val itemPairs = itemsString.split(",")
+
+        for (pair in itemPairs) {
+            val parts = pair.split(":")
+            val itemId = parts[0]
+            val amount = if (parts.size > 1) parts[1].toIntOrNull() ?: 1 else 1
+
+            if (plugin.itemManager.getItem(itemId) == null) {
+                sender.sendMessage(Component.text("El ítem '$itemId' no existe en items.yml. Envío cancelado.").color(NamedTextColor.RED))
+                return
+            }
+            attachedItems[itemId] = (attachedItems[itemId] ?: 0) + amount
+        }
+
+        if (showAdmin) {
+            val senderName = if (sender is Player) sender.name else "Administración"
+            messageBody += "\n\n- Atte: $senderName"
+        }
+
+        val mailTemplate = MailMessage(
+            type = MailType.REWARD,
+            title = "🎁 ¡Tienes un Regalo!",
+            body = messageBody,
+            attachedItems = attachedItems
+        )
+
+        distributeMail(sender, targetType, mailTemplate)
+    }
+
+    private fun distributeMail(sender: CommandSender, targetType: String, template: MailMessage) {
+        when (targetType) {
+            "online" -> {
+                var count = 0
+                for (player in Bukkit.getOnlinePlayers()) {
+                    val duelist = plugin.duelistManager.getDuelist(player.uniqueId) ?: continue
+                    duelist.mailbox.add(template.copy(id = UUID.randomUUID()))
+                    player.sendMessage(Component.text("¡Tienes un nuevo correo! Usa /tbc buzon").color(NamedTextColor.GOLD))
+                    count++
+                }
+                sender.sendMessage(Component.text("Mensaje enviado a $count jugadores conectados.").color(NamedTextColor.GREEN))
+            }
+            "all" -> {
+                sender.sendMessage(Component.text("Iniciando envío masivo a todos los jugadores registrados... (Esto puede tardar unos segundos)").color(NamedTextColor.YELLOW))
+
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+                    try {
+                        plugin.database.getConnection().use { conn ->
+                            val stmt = conn.prepareStatement("SELECT uuid FROM tbc_duelists")
+                            val rs = stmt.executeQuery()
+                            var count = 0
+
+                            while (rs.next()) {
+                                val uuidStr = rs.getString("uuid")
+                                val uuid = runCatching { UUID.fromString(uuidStr) }.getOrNull() ?: continue
+
+                                val duelist = plugin.duelistManager.getDuelist(uuid)
+                                    ?: plugin.duelistManager.loadDuelistData(uuid, "Offline").join()
+
+                                duelist.mailbox.add(template.copy(id = UUID.randomUUID()))
+
+                                if (Bukkit.getPlayer(uuid) == null) {
+                                    plugin.duelistManager.saveDuelistData(uuid)
+                                } else {
+                                    Bukkit.getPlayer(uuid)?.sendMessage(Component.text("¡Tienes un nuevo correo! Usa /tbc buzon").color(NamedTextColor.GOLD))
+                                }
+                                count++
+
+                                Thread.sleep(25)
+                            }
+                            sender.sendMessage(Component.text("¡Envío masivo completado! Mensaje entregado a $count usuarios.").color(NamedTextColor.GREEN))
+                        }
+                    } catch (e: Exception) {
+                        sender.sendMessage(Component.text("Ocurrió un error crítico en el envío masivo.").color(NamedTextColor.RED))
+                        e.printStackTrace()
+                    }
+                })
+            }
+            else -> {
+                val targetPlayer = Bukkit.getPlayerExact(targetType)
+                if (targetPlayer == null) {
+                    sender.sendMessage(Component.text("Jugador '$targetType' no encontrado o desconectado.").color(NamedTextColor.RED))
+                    return
+                }
+                val duelist = plugin.duelistManager.getDuelist(targetPlayer.uniqueId) ?: return
+                duelist.mailbox.add(template.copy(id = UUID.randomUUID()))
+                sender.sendMessage(Component.text("Mensaje enviado a ${targetPlayer.name}.").color(NamedTextColor.GREEN))
+                targetPlayer.sendMessage(Component.text("¡Tienes un nuevo correo! Usa /tbc buzon").color(NamedTextColor.GOLD))
+            }
+        }
     }
 
     private fun handleGiveItem(sender: CommandSender, args: Array<String>) {

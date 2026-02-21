@@ -11,6 +11,7 @@ data class Duelist(
     val pcStorage: MutableList<Companion> = mutableListOf(),
     val wins: Int = 0,
     val losses: Int = 0,
+    val mailbox: MutableList<MailMessage> = mutableListOf(),
 
     var isWild: Boolean = false
 ) {
