@@ -76,9 +76,14 @@ class VanillaCombatRenderer(
             val technique = plugin.techniqueManager.getTechnique(techniqueId)
             val displayName = technique?.displayName ?: techniqueId
 
+            val maxPP = technique?.maxPP ?: 0
+            val currentPP = activeCompanion.getRemainingPP(techniqueId, maxPP)
+
+            val color = if (currentPP > 0) NamedTextColor.AQUA else NamedTextColor.RED
+
             buttons.add(createButton(
                 anchor, right, xOffset, yOffset, "tech_$techniqueId",
-                Component.text("▶ $displayName").color(NamedTextColor.AQUA)
+                Component.text("▶ $displayName [$currentPP/$maxPP PP]").color(color)
             ))
         }
 
