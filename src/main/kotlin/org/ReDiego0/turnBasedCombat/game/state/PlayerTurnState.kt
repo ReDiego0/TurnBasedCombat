@@ -1,3 +1,4 @@
+// Deprecated
 //package org.ReDiego0.turnBasedCombat.game.state
 //
 //import net.kyori.adventure.text.Component
