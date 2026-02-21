@@ -12,7 +12,10 @@ ascuas:
   category: "MAGICAL"
   power: 40
   accuracy: 100
+  pp: 25
   applyStatusChance: 0.10
+  statusPower: 5 # Quita 5 HP por turno si es "continuedDamage"
+  statusDuration: 3 # Dura 3 turnos
 
 burbuja:
   displayName: "Burbuja"
@@ -20,7 +23,11 @@ burbuja:
   category: "MAGICAL"
   power: 40
   accuracy: 100
-  applyStatusChance: 0.0
+  pp: 25
+  applyStatusChance: 0.5
+  statusPower: 5
+  statusDuration: 3
+
 
 latigo_cepa:
   displayName: "Látigo Cepa"
@@ -28,4 +35,7 @@ latigo_cepa:
   category: "PHYSICAL"
   power: 45
   accuracy: 100
-  applyStatusChance: 0.0
+  pp: 25
+  applyStatusChance: 0.15
+  statusPower: 5
+  statusDuration: 3

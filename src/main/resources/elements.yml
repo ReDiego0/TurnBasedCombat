@@ -12,7 +12,11 @@ fuego:
     - "fuego"
     - "planta"
   immunities: []
-  nativeStatusEffect: "quemadura"
+  status:
+    id: "quemadura"
+    displayName: "Quemadura"
+    mechanics:
+      - "continuedDamage"
 
 agua:
   displayName: "Agua"
@@ -22,6 +26,11 @@ agua:
     - "agua"
     - "fuego"
   immunities: []
+  status:
+    id: "agotamiento"
+    displayName: "Agotamiento"
+    mechanics:
+      - "continuedDamage"
 
 planta:
   displayName: "Planta"
@@ -31,3 +40,8 @@ planta:
     - "agua"
     - "planta"
   immunities: []
+  status:
+    id: "paralisis"
+    displayName: "Paralisis"
+    mechanics:
+      - "continuedDamage"
