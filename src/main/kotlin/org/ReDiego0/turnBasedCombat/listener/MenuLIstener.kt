@@ -25,6 +25,41 @@ class MenuListener(private val plugin: TurnBasedCombat) : Listener {
             event.isCancelled = true
         }
 
+        if (inventory.holder is org.ReDiego0.turnBasedCombat.view.TeachMenuHolder) {
+            event.isCancelled = true
+            val holder = inventory.holder as org.ReDiego0.turnBasedCombat.view.TeachMenuHolder
+            val slot = event.rawSlot
+
+            if (slot == 45) {
+                org.ReDiego0.turnBasedCombat.view.MailboxGUI(plugin).openFor(player, holder.duelist)
+                return
+            }
+
+            if (holder.confirmMoveIndex == null) {
+                val moveIndexes = mapOf(28 to 0, 30 to 1, 32 to 2, 34 to 3)
+                if (moveIndexes.containsKey(slot)) {
+                    holder.confirmMoveIndex = moveIndexes[slot]
+                    org.ReDiego0.turnBasedCombat.view.TeachGUI(plugin).render(inventory, holder, holder.duelist, holder.companion, holder.newTechniqueId)
+                }
+            } else {
+                if (slot in listOf(20, 21, 22, 29)) {
+                    val index = holder.confirmMoveIndex!!
+                    val oldMove = holder.companion.moves[index]
+                    holder.companion.moves[index] = holder.newTechniqueId
+                    holder.companion.movePP.remove(oldMove)
+
+                    holder.activeMail.isClaimed = true
+                    player.sendMessage(Component.text("¡Puf! ${holder.companion.nickname} olvidó el movimiento antiguo y aprendió ${plugin.techniqueManager.getTechnique(holder.newTechniqueId)?.displayName}.").color(NamedTextColor.GREEN))
+                    org.ReDiego0.turnBasedCombat.view.MailboxGUI(plugin).openFor(player, holder.duelist)
+                }
+                else if (slot in listOf(24, 25, 26, 33, 35)) {
+                    holder.confirmMoveIndex = null
+                    org.ReDiego0.turnBasedCombat.view.TeachGUI(plugin).render(inventory, holder, holder.duelist, holder.companion, holder.newTechniqueId)
+                }
+            }
+            return
+        }
+
         if (inventory.holder is PcMenuHolder) {
             event.isCancelled = true
             val holder = inventory.holder as PcMenuHolder
@@ -149,8 +184,8 @@ class MenuListener(private val plugin: TurnBasedCombat) : Listener {
                                             MailboxGUI(plugin).render(inventory, duelist, currentPage, activeMail)
                                         }
                                     } else {
-                                        player.sendMessage(Component.text("${comp.nickname} ya conoce 4 movimientos. ¡Próximamente podrás reemplazar uno!").color(NamedTextColor.YELLOW))
-                                    }
+                                        org.ReDiego0.turnBasedCombat.view.TeachGUI(plugin).openFor(
+                                            player, duelist, comp, techId, activeMail ) }
                                 } else {
                                     player.sendMessage(Component.text("No se encontró el Companion (¿Fue liberado?).").color(NamedTextColor.RED))
                                     activeMail.isClaimed = true

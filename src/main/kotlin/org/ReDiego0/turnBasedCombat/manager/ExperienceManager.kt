@@ -54,7 +54,21 @@ class ExperienceManager(private val plugin: TurnBasedCombat) {
                     player?.sendMessage(Component.text("¡${companion.nickname} ha aprendido $techniqueName!").color(NamedTextColor.AQUA))
                 } else if (!companion.moves.contains(moveId)) {
                     val techniqueName = plugin.techniqueManager.getTechnique(moveId)?.displayName ?: moveId
-                    player?.sendMessage(Component.text("${companion.nickname} quiere aprender $techniqueName, pero ya conoce 4 técnicas.").color(NamedTextColor.YELLOW))
+                    player?.sendMessage(Component.text("${companion.nickname} quiere aprender $techniqueName. ¡Revisa tu buzón!").color(NamedTextColor.YELLOW))
+
+                    if (player != null) {
+                        val duelist = plugin.duelistManager.getDuelist(player.uniqueId)
+                        if (duelist != null) {
+                            val mail = org.ReDiego0.turnBasedCombat.model.MailMessage(
+                                type = org.ReDiego0.turnBasedCombat.model.MailType.TECHNIQUE,
+                                title = "${companion.nickname} quiere aprender $techniqueName",
+                                body = "¿Quieres que ${companion.nickname} olvide un movimiento antiguo para aprender $techniqueName?",
+                                targetCompanionId = companion.id,
+                                techniqueId = moveId
+                            )
+                            duelist.mailbox.add(mail)
+                        }
+                    }
                 }
             }
         }
